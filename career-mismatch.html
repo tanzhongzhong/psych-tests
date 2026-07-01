@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>心理测试</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+:root {
+  --ink: #1F2937;
+  --ink-2: #4B5563;
+  --ink-3: #6B7280;
+  --ink-4: #9CA3AF;
+  --ink-5: #E5E7EB;
+  --ink-6: #F3F4F6;
+  --ink-7: #F9FAFB;
+  --primary: #2B3957;
+  --primary-soft: #3D4F73;
+  --accent: #6B8E7F;
+  --warn: #D97757;
+  --warn-soft: #FFF1EB;
+  --ok: #5C8D7B;
+  --ok-soft: #EAF3EF;
+  --bg: #FBFAF7;
+  --card: #FFFFFF;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { background: var(--bg); }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+.app-container {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  position: relative;
+  background: var(--bg);
+  padding-bottom: 60px;
+}
+
+/* Page containers */
+.page {
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--transition), transform var(--transition);
+}
+.page.active { display: flex; opacity: 1; transform: translateY(0); }
+
+/* ===== COVER PAGE ===== */
+.cover-page {
+  align-items: center;
+  text-align: center;
+  background: var(--bg);
+  padding: 80px 28px 40px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  justify-content: flex-start;
+}
+.cover-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--ink);
+  margin-bottom: 56px;
+  background: var(--card);
+}
+.cover-title {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.5;
+  margin-bottom: 36px;
+  color: var(--ink);
+  letter-spacing: 0.5px;
+}
+.cover-desc {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--ink-2);
+  margin-bottom: 56px;
+  max-width: 320px;
+}
+.cover-desc em {
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 500;
+}
+.cover-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 18px 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  max-width: 320px;
+  letter-spacing: 4px;
+  transition: all 0.2s;
+}
+.cover-btn:active { transform: scale(0.98); background: var(--primary-soft); }
+.cover-meta {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--ink-4);
+  letter-spacing: 0.5px;
+}
+.cover-disclaimer {
+  position: absolute;
+  bottom: 20px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-4);
+}
+
+/* ===== QUESTION PAGE ===== */
+.question-page { background: var(--bg); padding: 0; min-height: 100vh; min-height: 100dvh; }
+
+.q-progress-wrap {
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding: 18px 24px 0;
+  z-index: 10;
+}
+.q-progress-text {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.q-progress-bar {
+  height: 3px;
+  background: var(--ink-5);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.q-progress-fill {
+  height: 100%;
+  background: var(--ink-3);
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+.q-body { padding: 0 24px 24px; flex: 1; }
+
+.q-number-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.q-number-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+.q-dim-tag {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.q-text {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.55;
+  margin-bottom: 36px;
+  color: var(--ink);
+  letter-spacing: 0.3px;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--ink-5);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  line-height: 1.5;
+}
+.option-btn:active { transform: scale(0.99); }
+.option-btn.selected {
+  border-color: var(--primary);
+  background: var(--ink-7);
+}
+.option-letter {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--ink-6);
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.option-btn.selected .option-letter {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* Question footer with arrow nav */
+.q-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 64px;
+  padding: 18px 24px 28px;
+}
+.q-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--ink-5);
+  color: var(--ink-3);
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.q-nav-btn:active { background: var(--ink-6); }
+.q-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+/* ===== CALCULATING PAGE ===== */
+.calculating-page {
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.calc-animation { text-align: center; }
+.calc-spinner {
+  width: 44px;
+  height: 44px;
+  border: 2.5px solid var(--ink-5);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 24px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.calc-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+.calc-sub {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 10px;
+}
+
+/* ===== RESULT PAGE ===== */
+.result-page { background: var(--bg); }
+
+/* Top "app" header (mimic 妙答) */
+.app-header {
+  background: var(--bg);
+  padding: 18px 16px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ink-6);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.app-header-x {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  font-size: 18px;
+  cursor: pointer;
+}
+.app-header-center {
+  text-align: center;
+  flex: 1;
+}
+.app-header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.3px;
+}
+.app-header-sub {
+  font-size: 11px;
+  color: var(--ink-4);
+  margin-top: 2px;
+}
+.app-header-more {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  font-size: 20px;
+  cursor: pointer;
+  letter-spacing: 1px;
+}
+
+/* Generic report cards */
+.report-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  margin: 0 16px 14px;
+  padding: 22px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border: 1px solid var(--ink-6);
+}
+.report-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.report-card-title-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--primary);
+}
+.report-card-sub {
+  font-size: 12px;
+  color: var(--ink-4);
+  margin-bottom: 12px;
+  margin-top: -8px;
+}
+.report-card p {
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--ink-2);
+  margin-bottom: 10px;
+}
+.report-card p:last-child { margin-bottom: 0; }
+
+/* Diagnosis report card (4 rows: 当前阶段/风险等级/核心问题/次级问题) */
+.diag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ink-6);
+}
+.diag-row:last-child { border-bottom: none; }
+.diag-label { font-size: 14px; color: var(--ink-3); }
+.diag-value { font-size: 15px; color: var(--ink); font-weight: 600; }
+.diag-value.ok { color: var(--ok); }
+.diag-value.warn { color: var(--warn); }
+.diag-value.normal { color: var(--ink); }
+
+/* Radar chart */
+.radar-card { text-align: left; }
+.radar-chart-box {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  margin: 12px auto 0;
+}
+
+/* Pull-quote (深色引文块) */
+.pull-quote {
+  background: var(--ink-7);
+  border-left: 3px solid var(--primary);
+  padding: 14px 16px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-top: 10px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink);
+}
+
+/* Two-column future projection */
+.future-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+.future-card {
+  border-radius: var(--radius-sm);
+  padding: 14px 12px;
+}
+.future-card.bad {
+  background: var(--warn-soft);
+  border: 1px solid #F8D5C5;
+}
+.future-card.good {
+  background: var(--ok-soft);
+  border: 1px solid #CFE3D9;
+}
+.future-card h4 {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.future-card.bad h4 { color: var(--warn); }
+.future-card.good h4 { color: var(--ok); }
+.future-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.future-card li {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  padding-left: 14px;
+  position: relative;
+  margin-bottom: 4px;
+}
+.future-card li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 8px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--ink-4);
+}
+.future-card.bad li::before { background: var(--warn); }
+.future-card.good li::before { background: var(--ok); }
+
+/* 30-day action roadmap */
+.roadmap {
+  position: relative;
+  padding-left: 8px;
+  margin-top: 8px;
+}
+.roadmap::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--ink-5);
+}
+.roadmap-step {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  position: relative;
+}
+.roadmap-step:last-child { margin-bottom: 0; }
+.roadmap-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  z-index: 1;
+  position: relative;
+  box-shadow: 0 0 0 4px var(--card);
+}
+.roadmap-content { flex: 1; padding-top: 4px; }
+.roadmap-week {
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-bottom: 2px;
+}
+.roadmap-action {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.roadmap-detail {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* Result actions */
+.result-actions {
+  display: flex;
+  gap: 10px;
+  padding: 4px 16px 0;
+}
+.btn-restart {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--ink-5);
+  color: var(--ink-2);
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-restart:active { background: var(--ink-7); }
+.btn-share {
+  flex: 1;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  letter-spacing: 0.5px;
+}
+.btn-share:active { background: var(--primary-soft); }
+
+/* Footer disclaimer */
+.result-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--ink-4);
+  padding: 24px 16px 8px;
+}
+
+/* Share card (hidden, used for capture) */
+.share-card {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 375px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.share-card-header {
+  background: var(--primary);
+  color: #fff;
+  padding: 22px 20px 18px;
+  text-align: center;
+}
+.share-card-header .name { font-size: 20px; font-weight: 700; }
+.share-card-header .desc { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+.share-card-body { padding: 18px; }
+.share-card-body h4 { font-size: 13px; color: var(--ink-3); margin-bottom: 10px; }
+.share-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.share-score-item {
+  background: var(--ink-7);
+  border-radius: 8px;
+  padding: 10px;
+  text-align: center;
+}
+.share-score-item .label { font-size: 11px; color: var(--ink-3); }
+.share-score-item .val { font-size: 22px; font-weight: 700; color: var(--ink); }
+.share-card-footer {
+  text-align: center;
+  padding: 14px;
+  border-top: 1px solid var(--ink-6);
+  font-size: 11px;
+  color: var(--ink-4);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- COVER PAGE -->
+  <div class="page cover-page active" id="coverPage">
+    <div class="cover-mark" id="coverMark">?</div>
+    <h1 class="cover-title" id="coverTitle"></h1>
+    <div class="cover-desc" id="coverDesc"></div>
+    <button class="cover-btn" onclick="startTest()">开 始 诊 断</button>
+    <div class="cover-meta" id="coverMeta"></div>
+    <p class="cover-disclaimer">⚠️ 纯趣味测试，非科学评估，结果仅供娱乐</p>
+  </div>
+
+  <!-- QUESTION PAGE -->
+  <div class="page question-page" id="questionPage">
+    <div class="q-progress-wrap">
+      <div class="q-progress-text" id="progressText"></div>
+      <div class="q-progress-bar">
+        <div class="q-progress-fill" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="q-body">
+      <div class="q-number-row">
+        <div class="q-number-circle" id="qNumberCircle">1</div>
+        <div class="q-dim-tag" id="qDimTag"></div>
+      </div>
+      <h2 class="q-text" id="questionText"></h2>
+      <div class="options-list" id="optionsList"></div>
+    </div>
+    <div class="q-footer">
+      <button class="q-nav-btn" id="btnPrev" onclick="prevQuestion()" disabled>‹</button>
+      <button class="q-nav-btn" id="btnNext" onclick="nextQuestion()" disabled>›</button>
+    </div>
+  </div>
+
+  <!-- CALCULATING PAGE -->
+  <div class="page calculating-page" id="calcPage">
+    <div class="calc-animation">
+      <div class="calc-spinner"></div>
+      <p class="calc-text">正在生成你的诊断报告...</p>
+      <p class="calc-sub">深度分析中，请稍候</p>
+    </div>
+  </div>
+
+  <!-- RESULT PAGE -->
+  <div class="page result-page" id="resultPage">
+    <div class="app-header">
+      <div class="app-header-x" onclick="restartTest()">✕</div>
+      <div class="app-header-center">
+        <div class="app-header-title" id="appHeaderTitle">人生状态诊断</div>
+        <div class="app-header-sub" id="appHeaderSub">app-miaoda.com</div>
+      </div>
+      <div class="app-header-more">···</div>
+    </div>
+    <div id="resultBody"></div>
+    <div class="result-actions">
+      <button class="btn-restart" onclick="restartTest()">🔄 重新诊断</button>
+      <button class="btn-share" onclick="shareResult()">📸 生成分享图</button>
+    </div>
+    <div class="result-footer">⚠️ 纯趣味测试，非科学评估，结果仅供参考</div>
+  </div>
+
+  <!-- SHARE CARD (hidden) -->
+  <div class="share-card" id="shareCard"></div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+// ============ STATE ============
+let config = null;
+let currentQuestion = 0;
+let answers = {};
+let resultData = null;
+
+const LETTERS = ['A','B','C','D','E','F'];
+
+// ============ INIT ============
+async function init() {
+  const params = new URLSearchParams(window.location.search);
+  const configName = 'career-mismatch';
+  try {
+    const resp = await fetch(`configs/${configName}.json`);
+    if (!resp.ok) throw new Error('Config not found');
+    config = await resp.json();
+  } catch(e) {
+    document.getElementById('coverPage').innerHTML = `
+      <div style="text-align:center;padding:60px 24px;color:var(--ink-3);">
+        <div style="font-size:48px;margin-bottom:16px;">😢</div>
+        <h2 style="color:var(--ink);margin-bottom:8px;">测试配置加载失败</h2>
+        <p>请检查链接是否正确</p>
+      </div>`;
+    return;
+  }
+  renderCover();
+}
+
+function renderCover() {
+  const m = config.meta;
+  // Title with newlines preserved
+  document.getElementById('coverTitle').innerHTML = (m.title || '').replace(/\n/g, '<br>');
+  // Desc with newlines preserved, **bold** support
+  document.getElementById('coverDesc').innerHTML = (m.subtitle || '').replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<em>$1</em>');
+  document.getElementById('coverMark').textContent = m.mark || '?';
+  document.getElementById('appHeaderTitle').textContent = m.headerTitle || m.title.split('\n')[0];
+  document.getElementById('appHeaderSub').textContent = m.headerSub || 'app-miaoda.com';
+  document.getElementById('coverMeta').textContent = `${config.questions.length}道题目 · 约3分钟 · 生成专属${m.headerTitle || '诊断'}报告`;
+  document.title = m.title.replace(/\n/g, ' ');
+}
+
+// ============ PAGE NAV ============
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ============ TEST FLOW ============
+function startTest() {
+  currentQuestion = 0;
+  answers = {};
+  showPage('questionPage');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = config.questions[currentQuestion];
+  const total = config.questions.length;
+  const dim = config.dimensions.find(d => d.id === q.dimension) || config.dimensions[0];
+
+  document.getElementById('progressBar').style.width = `${((currentQuestion + 1) / total) * 100}%`;
+  document.getElementById('progressText').textContent = `${dim.name}  ${currentQuestion + 1} / ${total}`;
+  document.getElementById('qNumberCircle').textContent = currentQuestion + 1;
+  document.getElementById('qDimTag').textContent = dim.name;
+  document.getElementById('questionText').textContent = q.text;
+
+  const optionsList = document.getElementById('optionsList');
+  optionsList.innerHTML = '';
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    const isSelected = answers[q.id] !== undefined && answers[q.id].index === idx;
+    if (isSelected) btn.classList.add('selected');
+    btn.innerHTML = `<span class="option-letter">${LETTERS[idx]}</span><span>${opt.text}</span>`;
+    btn.onclick = () => selectOption(q.id, idx, opt.score);
+    optionsList.appendChild(btn);
+  });
+
+  document.getElementById('btnPrev').disabled = currentQuestion === 0;
+  document.getElementById('btnNext').disabled = answers[q.id] === undefined;
+  document.getElementById('btnNext').textContent = currentQuestion === total - 1 ? '✓' : '›';
+
+  window.scrollTo(0, 0);
+}
+
+function selectOption(qId, idx, score) {
+  const q = config.questions[currentQuestion];
+  answers[qId] = { index: idx, score };
+  document.querySelectorAll('.option-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', i === idx);
+  });
+  // Auto-advance to next question
+  setTimeout(() => {
+    const total = config.questions.length;
+    if (currentQuestion < total - 1) {
+      currentQuestion++;
+      renderQuestion();
+    } else {
+      // Last question — show submit option
+      document.getElementById('btnNext').disabled = false;
+    }
+  }, 280);
+}
+
+function prevQuestion() {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    renderQuestion();
+  }
+}
+
+function nextQuestion() {
+  const total = config.questions.length;
+  if (currentQuestion < total - 1) {
+    currentQuestion++;
+    renderQuestion();
+  } else {
+    calculateAndShowResult();
+  }
+}
+
+// ============ SCORING ============
+function calculateAndShowResult() {
+  showPage('calcPage');
+
+  const dimScores = {};
+  config.dimensions.forEach(d => { dimScores[d.id] = { total: 0, count: 0, max: 0 }; });
+
+  config.questions.forEach(q => {
+    if (answers[q.id]) {
+      const dimId = q.dimension || config.dimensions[0].id;
+      if (dimScores[dimId]) {
+        const maxScore = q.options.length;
+        dimScores[dimId].total += answers[q.id].score;
+        dimScores[dimId].count++;
+        dimScores[dimId].max += maxScore;
+      }
+    }
+  });
+
+  const dimResults = {};
+  Object.keys(dimScores).forEach(id => {
+    const d = dimScores[id];
+    dimResults[id] = {
+      score: d.total,
+      max: d.max,
+      percentage: d.max > 0 ? Math.round((d.total / d.max) * 100) : 0
+    };
+  });
+
+  const sorted = Object.entries(dimResults).sort((a, b) => a[1].percentage - b[1].percentage);
+  const lowestKey = sorted[0][0];
+
+  let resultType = config.results.find(r => {
+    if (r.rule) {
+      if (r.rule.type === 'all_below') {
+        return Object.entries(r.rule.dimensions).every(([dim, threshold]) =>
+          dimResults[dim] && dimResults[dim].percentage < threshold
+        );
+      }
+      if (r.rule.type === 'dim_below') {
+        return dimResults[r.rule.dimension] && dimResults[r.rule.dimension].percentage < r.rule.threshold;
+      }
+      if (r.rule.type === 'dim_is_lowest') {
+        return lowestKey === r.rule.dimension;
+      }
+      if (r.rule.type === 'dim_is_highest') {
+        const highestKey = sorted[sorted.length - 1][0];
+        return highestKey === r.rule.dimension;
+      }
+    }
+    return false;
+  });
+
+  if (!resultType) {
+    resultType = config.results.find(r => {
+      if (!r.dimension) return false;
+      if (Array.isArray(r.dimension)) {
+        return r.dimension.includes(lowestKey);
+      }
+      return r.dimension === lowestKey;
+    });
+  }
+
+  if (!resultType) {
+    resultType = config.results[0];
+  }
+
+  resultData = {
+    type: resultType,
+    dimensions: dimResults,
+    dimOrder: sorted,
+  };
+
+  setTimeout(() => {
+    renderResult();
+    showPage('resultPage');
+  }, 1500);
+}
+
+// ============ RESULT RENDERING ============
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderResult() {
+  const r = resultData.type;
+  const dims = resultData.dimensions;
+
+  let html = '';
+
+  // ============ 1. 诊断报告卡 (4 rows) ============
+  html += '<div class="report-card">';
+  html += '<div class="report-card-title"><span class="report-card-title-icon">🛡</span>人生诊断报告</div>';
+  const stage = r.stage || '—';
+  const risk = r.risk || { level: '中等', cls: 'normal', label: '中等风险' };
+  const core = r.core || r.name;
+  const secondary = r.secondary || '—';
+  html += `
+    <div class="diag-row"><span class="diag-label">当前阶段</span><span class="diag-value">${escHtml(stage)}</span></div>
+    <div class="diag-row"><span class="diag-label">风险等级</span><span class="diag-value ${escHtml(risk.cls || 'normal')}">${escHtml(risk.label || risk.level || '—')}</span></div>
+    <div class="diag-row"><span class="diag-label">核心问题</span><span class="diag-value">${escHtml(core)}</span></div>
+    <div class="diag-row"><span class="diag-label">次级问题</span><span class="diag-value">${escHtml(secondary)}</span></div>
+  `;
+  html += '</div>';
+
+  // ============ 2. 雷达图 + 状态总览 ============
+  if (config.dimensions.length >= 3) {
+    html += `
+    <div class="report-card radar-card">
+      <div class="report-card-title"><span class="report-card-title-icon">📊</span>${config.meta.radarTitle || '状态总览'}</div>
+      <div class="radar-chart-box">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>`;
+  }
+
+  // ============ 3. 深度分析 ============
+  if (r.deepAnalysis) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">🔍</span>深度分析</div>';
+    const paras = Array.isArray(r.deepAnalysis) ? r.deepAnalysis : [r.deepAnalysis];
+    paras.forEach(p => { html += `<p>${escHtml(p)}</p>`; });
+    html += '</div>';
+  }
+
+  // ============ 4. 真实消耗来源 ============
+  if (r.drainSources && r.drainSources.length > 0) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">⚠</span>你的真实消耗来源</div>';
+    r.drainSources.forEach(s => {
+      if (typeof s === 'string') {
+        html += `<p>• ${escHtml(s)}</p>`;
+      } else {
+        html += `<p><strong>${escHtml(s.title)}</strong></p><p>${escHtml(s.detail)}</p>`;
+      }
+    });
+    html += '</div>';
+  }
+
+  // ============ 5. 优势 / 隐藏优势 ============
+  if (r.strengths && r.strengths.length > 0) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">💪</span>你的核心优势</div>';
+    r.strengths.forEach(s => { html += `<p>✓ ${escHtml(s)}</p>`; });
+    html += '</div>';
+  }
+
+  if (r.hiddenStrength) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">🌟</span>你的隐藏优势</div>';
+    html += `<div class="pull-quote">${escHtml(r.hiddenStrength)}</div>`;
+    html += '</div>';
+  }
+
+  // ============ 6. 最不该做的事 / 风险警示 ============
+  if (r.avoid) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title" style="color:var(--warn);"><span class="report-card-title-icon" style="color:var(--warn);">!</span>你现在最不该做</div>';
+    html += `<div class="pull-quote" style="border-left-color:var(--warn);background:var(--warn-soft);"><strong style="color:var(--warn);">${escHtml(r.avoid.title || r.avoid)}</strong>${r.avoid.detail ? '<br><br>' + escHtml(r.avoid.detail) : ''}</div>`;
+    html += '</div>';
+  }
+
+  // ============ 7. 盲区 ============
+  if (r.blindSpots && r.blindSpots.length > 0) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">◌</span>你的盲区</div>';
+    r.blindSpots.forEach(s => {
+      if (typeof s === 'string') {
+        html += `<p>• ${escHtml(s)}</p>`;
+      } else {
+        html += `<p><strong>${escHtml(s.title)}</strong></p><p>${escHtml(s.detail)}</p>`;
+      }
+    });
+    html += '</div>';
+  }
+
+  // ============ 8. 未来推演 (双列) ============
+  if (r.futureNoChange || r.futureChange) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">↗</span>未来推演</div>';
+    html += '<div class="future-grid">';
+    const noChange = r.futureNoChange || { title: '维持现状', items: [] };
+    const change = r.futureChange || { title: '开始调整', items: [] };
+    html += `<div class="future-card bad"><h4>${escHtml(noChange.title)}</h4><ul>`;
+    (noChange.items || [noChange]).forEach(it => { html += `<li>${escHtml(it)}</li>`; });
+    html += '</ul></div>';
+    html += `<div class="future-card good"><h4>${escHtml(change.title)}</h4><ul>`;
+    (change.items || [change]).forEach(it => { html += `<li>${escHtml(it)}</li>`; });
+    html += '</ul></div>';
+    html += '</div></div>';
+  }
+
+  // ============ 9. 30天行动路线图 ============
+  if (r.actionPlan && r.actionPlan.length > 0) {
+    html += '<div class="report-card">';
+    html += '<div class="report-card-title"><span class="report-card-title-icon">◎</span>未来30天行动路线图</div>';
+    html += '<div class="roadmap">';
+    r.actionPlan.forEach((step, i) => {
+      const title = step.title || step.week || `第${i+1}周`;
+      const detail = step.detail || step;
+      const week = step.week && step.title ? step.week : `第${i+1}周`;
+      html += `<div class="roadmap-step">
+        <div class="roadmap-num">${i+1}</div>
+        <div class="roadmap-content">
+          <div class="roadmap-week">${escHtml(week)}</div>
+          <div class="roadmap-action">${escHtml(title)}</div>
+          <div class="roadmap-detail">${escHtml(detail)}</div>
+        </div>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // ============ 10. 收束句 ============
+  if (r.closing) {
+    html += '<div class="report-card" style="text-align:center;background:var(--ink-7);">';
+    html += `<p style="font-size:15px;line-height:1.85;color:var(--ink);font-weight:500;">${escHtml(r.closing)}</p>`;
+    html += '</div>';
+  }
+
+  document.getElementById('resultBody').innerHTML = html;
+  setTimeout(renderRadarChart, 100);
+}
+
+function renderRadarChart() {
+  const canvas = document.getElementById('radarChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dims = resultData.dimensions;
+
+  new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: config.dimensions.map(d => d.name),
+      datasets: [{
+        label: '你的得分',
+        data: config.dimensions.map(d => dims[d.id].percentage),
+        backgroundColor: 'rgba(43,57,87,0.10)',
+        borderColor: '#1F2937',
+        borderWidth: 1.5,
+        pointBackgroundColor: '#1F2937',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 1.5,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          min: 0,
+          ticks: { stepSize: 25, display: false },
+          pointLabels: {
+            font: { size: 13, weight: '500' },
+            color: '#4B5563'
+          },
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          angleLines: { color: 'rgba(0,0,0,0.06)' },
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+// ============ SHARE ============
+async function shareResult() {
+  const r = resultData.type;
+  const dims = resultData.dimensions;
+
+  let html = `
+    <div class="share-card-header">
+      <div class="name">${escHtml(r.name)}</div>
+      <div class="desc">${escHtml(r.shortDesc || '')}</div>
+    </div>
+    <div class="share-card-body">
+      <h4>四维能量得分</h4>
+      <div class="share-scores">
+  `;
+  config.dimensions.forEach(d => {
+    html += `<div class="share-score-item"><div class="label">${escHtml(d.name)}</div><div class="val">${dims[d.id].percentage}%</div></div>`;
+  });
+  html += `</div></div><div class="share-card-footer">${escHtml(config.meta.headerTitle || '心理测试')}</div>`;
+
+  const shareCard = document.getElementById('shareCard');
+  shareCard.innerHTML = html;
+  shareCard.style.left = '0';
+  shareCard.style.top = '0';
+  shareCard.style.zIndex = '-1';
+
+  await new Promise(res => setTimeout(res, 300));
+
+  try {
+    const canvas = await html2canvas(shareCard, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#FFFFFF',
+    });
+    shareCard.style.left = '-9999px';
+    shareCard.style.zIndex = '';
+
+    const link = document.createElement('a');
+    link.download = `${config.meta.title.replace(/\n/g,'-')}-${r.name}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+
+    showToast('✅ 图片已保存，可分享到评论区');
+  } catch(e) {
+    shareCard.style.left = '-9999px';
+    shareCard.style.zIndex = '';
+    showToast('请截图此页面分享到评论区');
+    console.error('Share error:', e);
+  }
+}
+
+// ============ RESTART ============
+function restartTest() {
+  currentQuestion = 0;
+  answers = {};
+  resultData = null;
+  showPage('coverPage');
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ============ START ============
+init();
+</script>
+
+</body>
+</html>
