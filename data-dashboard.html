@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>橘猫的答案箱 - 流量数据看板</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background: #f5f7fa; color: #333; line-height: 1.6;
+}
+.header {
+  background: linear-gradient(135deg, #2B3957 0%, #4A6FA5 100%);
+  color: white; padding: 36px 24px; text-align: center;
+}
+.header h1 { font-size: 28px; margin-bottom: 8px; }
+.header p { opacity: 0.85; font-size: 14px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.stat-card {
+  background: white; border-radius: 12px; padding: 20px;
+  text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-card .num { font-size: 32px; font-weight: 700; color: #2B3957; }
+.stat-card .label { font-size: 13px; color: #888; margin-top: 6px; }
+.stat-card .sub { font-size: 11px; color: #aaa; margin-top: 4px; }
+.chart-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 16px; margin-bottom: 24px;
+}
+.chart-card {
+  background: white; border-radius: 12px; padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.chart-card h3 {
+  font-size: 16px; font-weight: 600; color: #2B3957;
+  margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+}
+.chart-box { position: relative; width: 100%; }
+.chart-box canvas { max-height: 300px; }
+.table-card {
+  background: white; border-radius: 12px; padding: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;
+  margin-bottom: 24px;
+}
+.table-card h3 {
+  font-size: 16px; font-weight: 600; color: #2B3957;
+  padding: 20px 20px 0; margin-bottom: 8px;
+}
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: #f8f9fb; color: #666; font-weight: 600;
+  padding: 12px 14px; text-align: left; white-space: nowrap;
+  border-bottom: 2px solid #e8eaed;
+}
+td {
+  padding: 10px 14px; border-bottom: 1px solid #f0f1f3;
+  max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+tr:hover td { background: #fafbfc; }
+.badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+.badge-hot { background: #FDEDEC; color: #E74C3C; }
+.badge-good { background: #EAF2F8; color: #2980B9; }
+.badge-normal { background: #F4F6F7; color: #7F8C8D; }
+.insight-box {
+  background: linear-gradient(135deg, #FFF8E1, #FFF3E0);
+  border-left: 4px solid #F39C12; padding: 20px 24px;
+  border-radius: 0 12px 12px 0; margin-bottom: 24px;
+}
+.insight-box h3 { color: #E67E22; font-size: 16px; margin-bottom: 12px; }
+.insight-box ul { margin-left: 18px; }
+.insight-box li { margin-bottom: 6px; font-size: 14px; color: #333; }
+.full-card {
+  background: white; border-radius: 12px; padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px;
+}
+.full-card h3 { font-size: 18px; font-weight: 600; color: #2B3957; margin-bottom: 16px; }
+.red { color: #E74C3C; }
+.blue { color: #2980B9; }
+.gold { color: #F39C12; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>橘猫的答案箱 · 流量数据看板</h1>
+  <p>基于69条笔记真实数据 · 自动分析最优策略</p>
+</div>
+
+<div class="container">
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="insight-box" id="insightsBox">
+    <h3>💡 AI 策略建议</h3>
+    <ul id="insightsList"></ul>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>📈 各类别流量分布</h3>
+      <div class="chart-box"><canvas id="chartCategory"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🔥 互动率对比</h3>
+      <div class="chart-box"><canvas id="chartEngagement"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>📊 流量 vs 互动散点</h3>
+      <div class="chart-box"><canvas id="chartScatter"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🏷 标题公式流量对比</h3>
+      <div class="chart-box"><canvas id="chartFormula"></canvas></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <h3>🏆 TOP 20 爆款笔记</h3>
+    <div class="table-wrap"><table id="topTable"><thead><tr><th>#</th><th>标题</th><th>预计阅读量</th><th>点赞</th><th>收藏</th><th>评论</th><th>分享</th><th>互动率</th><th>类别</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div class="full-card">
+    <h3>📋 发布策略建议</h3>
+    <div id="strategyContent"></div>
+  </div>
+</div>
+
+<script>
+const RAW_DATA = [
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a423bfc000000001700a07c?xhsshare=CopyLink&type=video",
+    "title": "你的聊天反应能力有多高？",
+    "estimated_views": 1804,
+    "likes": 2,
+    "saves": 2,
+    "comments": 60,
+    "shares": 1,
+    "publish_time": "2026-06-29 17:33:48",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a3c91a8000000001c027f45?xhsshare=CopyLink&type=video",
+    "title": "i人最容易在哪个事上成功？",
+    "estimated_views": 2318,
+    "likes": 5,
+    "saves": 2,
+    "comments": 78,
+    "shares": 0,
+    "publish_time": "2026-06-25 10:25:44",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a3bba44000000001702840a?xhsshare=CopyLink&type=video",
+    "title": "你的人生最该换的是什么？",
+    "estimated_views": 19143,
+    "likes": 18,
+    "saves": 7,
+    "comments": 654,
+    "shares": 1,
+    "publish_time": "2026-06-24 19:06:44",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a311fb1000000001702b529?xhsshare=CopyLink&type=video",
+    "title": "你真的想辞职，还是只是太累了？",
+    "estimated_views": 6996,
+    "likes": 2,
+    "saves": 2,
+    "comments": 240,
+    "shares": 1,
+    "publish_time": "2026-06-16 18:04:33",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a2fcf64000000001503e2a1?xhsshare=CopyLink&type=video",
+    "title": "测测：你是否适合从商？",
+    "estimated_views": 131081,
+    "likes": 197,
+    "saves": 78,
+    "comments": 4400,
+    "shares": 42,
+    "publish_time": "2026-06-15 18:09:40",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a2e7724000000001602761e?xhsshare=CopyLink&type=video",
+    "title": "你的社会化到了第几级了？",
+    "estimated_views": 364222,
+    "likes": 496,
+    "saves": 174,
+    "comments": 12258,
+    "shares": 114,
+    "publish_time": "2026-06-14 17:40:52",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a2bbd74000000001702f0ff?xhsshare=CopyLink&type=video",
+    "title": "你更需要陪伴还是自由？",
+    "estimated_views": 2649,
+    "likes": 8,
+    "saves": 7,
+    "comments": 87,
+    "shares": 0,
+    "publish_time": "2026-06-12 16:04:04",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a27fd43000000001c027510?xhsshare=CopyLink&type=video",
+    "title": "测一测：你是那种依恋类型？",
+    "estimated_views": 1520,
+    "likes": 4,
+    "saves": 1,
+    "comments": 51,
+    "shares": 0,
+    "publish_time": "2026-06-09 19:47:15",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a2698200000000015027a9d?xhsshare=CopyLink&type=video",
+    "title": "你现在该换职业方向，还是继续深耕？",
+    "estimated_views": 49599,
+    "likes": 69,
+    "saves": 36,
+    "comments": 1674,
+    "shares": 7,
+    "publish_time": "2026-06-08 18:23:28",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a25416700000000170296ea?xhsshare=CopyLink&type=video",
+    "title": "你爱上的从来不是一个人，而是一种心理投射",
+    "estimated_views": 14020,
+    "likes": 18,
+    "saves": 5,
+    "comments": 477,
+    "shares": 1,
+    "publish_time": "2026-06-07 18:01:11",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a23fb23000000001c024839?xhsshare=CopyLink&type=video",
+    "title": "工作干的不开心，是走还是留？",
+    "estimated_views": 57631,
+    "likes": 91,
+    "saves": 39,
+    "comments": 1921,
+    "shares": 27,
+    "publish_time": "2026-06-06 18:49:07",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a22d50d000000001502424e?xhsshare=CopyLink&type=video",
+    "title": "心动型VS适配型，你更适合哪个？",
+    "estimated_views": 32505,
+    "likes": 48,
+    "saves": 19,
+    "comments": 1092,
+    "shares": 10,
+    "publish_time": "2026-06-05 21:54:21",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a214fe3000000003700daa9?xhsshare=CopyLink&type=video",
+    "title": "童年经历会影响你反复爱上同一种人？",
+    "estimated_views": 277692,
+    "likes": 773,
+    "saves": 313,
+    "comments": 9093,
+    "shares": 134,
+    "publish_time": "2026-06-04 18:13:55",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1ffdc9000000003603055a?xhsshare=CopyLink&type=video",
+    "title": "别人为什么会记住你？",
+    "estimated_views": 5949,
+    "likes": 19,
+    "saves": 7,
+    "comments": 195,
+    "shares": 2,
+    "publish_time": "2026-06-03 18:11:21",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1eb156000000003601f971?xhsshare=CopyLink&type=video",
+    "title": "你该换工作，还是换活法？",
+    "estimated_views": 1552583,
+    "likes": 3104,
+    "saves": 1272,
+    "comments": 51107,
+    "shares": 1000,
+    "publish_time": "2026-06-02 18:32:54",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1d58f80000000038020df8?xhsshare=CopyLink&type=video",
+    "title": "你的爱情底色是什么？",
+    "estimated_views": 10155,
+    "likes": 16,
+    "saves": 4,
+    "comments": 342,
+    "shares": 1,
+    "publish_time": "2026-06-01 18:03:36",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1c076a000000003802246b?xhsshare=CopyLink&type=video",
+    "title": "你是S人，还是N人？",
+    "estimated_views": 53797,
+    "likes": 106,
+    "saves": 28,
+    "comments": 1795,
+    "shares": 18,
+    "publish_time": "2026-05-31 18:03:23",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1a7a85000000003802083f?xhsshare=CopyLink&type=video",
+    "title": "冷漠只是你的保护色",
+    "estimated_views": 18618,
+    "likes": 40,
+    "saves": 8,
+    "comments": 624,
+    "shares": 4,
+    "publish_time": "2026-05-30 13:49:57",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1960b2000000003700c22e?xhsshare=CopyLink&type=video",
+    "title": "infp绝不内耗版！",
+    "estimated_views": 10454,
+    "likes": 93,
+    "saves": 26,
+    "comments": 322,
+    "shares": 0,
+    "publish_time": "2026-05-29 17:47:30",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1813ed000000003601e8e3?xhsshare=CopyLink&type=video",
+    "title": "你会对哪种类型的人上头？年上or年下",
+    "estimated_views": 937432,
+    "likes": 1609,
+    "saves": 419,
+    "comments": 31445,
+    "shares": 280,
+    "publish_time": "2026-05-28 18:07:42",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a167ca30000000038034495?xhsshare=CopyLink&type=video",
+    "title": "为什么你总想“重新开始”？",
+    "estimated_views": 12710,
+    "likes": 36,
+    "saves": 11,
+    "comments": 421,
+    "shares": 3,
+    "publish_time": "2026-05-27 13:09:55",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a15804700000000360329da?xhsshare=CopyLink&type=video",
+    "title": "真诚就是最高的城府",
+    "estimated_views": 50783,
+    "likes": 84,
+    "saves": 29,
+    "comments": 1715,
+    "shares": 6,
+    "publish_time": "2026-05-26 19:13:11",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a152b63000000003703530a?xhsshare=CopyLink&type=video",
+    "title": "你的活人感有多强？",
+    "estimated_views": 3711,
+    "likes": 10,
+    "saves": 3,
+    "comments": 123,
+    "shares": 1,
+    "publish_time": "2026-05-26 13:10:59",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a13d8e3000000003701d513?xhsshare=CopyLink&type=video",
+    "title": "你正在焦虑的事会有好结果",
+    "estimated_views": 41894,
+    "likes": 129,
+    "saves": 7,
+    "comments": 1396,
+    "shares": 7,
+    "publish_time": "2026-05-25 13:06:43",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1280a90000000038034718?xhsshare=CopyLink&type=video",
+    "title": "大多数人都缺乏主体性思维！",
+    "estimated_views": 170223,
+    "likes": 387,
+    "saves": 120,
+    "comments": 5660,
+    "shares": 44,
+    "publish_time": "2026-05-24 12:38:01",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a117c940000000038036591?xhsshare=CopyLink&type=video",
+    "title": "你不是普通，只是活错了位置！",
+    "estimated_views": 18189,
+    "likes": 31,
+    "saves": 11,
+    "comments": 609,
+    "shares": 6,
+    "publish_time": "2026-05-23 18:08:20",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a1135e2000000003601b57e?xhsshare=CopyLink&type=video",
+    "title": "你适合大城市拼还是小城市躺？",
+    "estimated_views": 223486,
+    "likes": 290,
+    "saves": 86,
+    "comments": 7467,
+    "shares": 100,
+    "publish_time": "2026-05-23 13:06:42",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a102aec00000000380376a7?xhsshare=CopyLink&type=video",
+    "title": "我发现了INFP的天赋!",
+    "estimated_views": 34258,
+    "likes": 209,
+    "saves": 78,
+    "comments": 1085,
+    "shares": 5,
+    "publish_time": "2026-05-22 18:07:40",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0fd26d000000003601b6d4?xhsshare=CopyLink&type=video",
+    "title": "女孩子记住❗️克服那个瞬间，你就胜利了",
+    "estimated_views": 2262,
+    "likes": 13,
+    "saves": 2,
+    "comments": 72,
+    "shares": 1,
+    "publish_time": "2026-05-22 11:50:05",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0e87940000000037037858?xhsshare=CopyLink&type=video",
+    "title": "你是纯血INFP吗？",
+    "estimated_views": 133675,
+    "likes": 645,
+    "saves": 155,
+    "comments": 4329,
+    "shares": 26,
+    "publish_time": "2026-05-21 12:18:28",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0d415f000000003700c341?xhsshare=CopyLink&type=video",
+    "title": "你为什么总是忍！",
+    "estimated_views": 13438,
+    "likes": 35,
+    "saves": 13,
+    "comments": 446,
+    "shares": 3,
+    "publish_time": "2026-05-20 13:06:39",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0bfcea000000003601aa17?xhsshare=CopyLink&type=video",
+    "title": "我什么时候苦尽甘来呀😭",
+    "estimated_views": 75178,
+    "likes": 167,
+    "saves": 50,
+    "comments": 2529,
+    "shares": 3,
+    "publish_time": "2026-05-19 14:02:18",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0a9d040000000038036eb6?xhsshare=CopyLink&type=video",
+    "title": "你是别人的白月光还是意难平？",
+    "estimated_views": 28160,
+    "likes": 42,
+    "saves": 17,
+    "comments": 954,
+    "shares": 2,
+    "publish_time": "2026-05-18 13:00:52",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a099241000000003701cb37?xhsshare=CopyLink&type=video",
+    "title": "你是哪种泪失禁体质？",
+    "estimated_views": 487791,
+    "likes": 1940,
+    "saves": 507,
+    "comments": 15926,
+    "shares": 90,
+    "publish_time": "2026-05-17 18:02:42",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a07fc4a000000003700c479?xhsshare=CopyLink&type=video",
+    "title": "心理测试：你下一份工作是什么？",
+    "estimated_views": 36217,
+    "likes": 57,
+    "saves": 24,
+    "comments": 1226,
+    "shares": 2,
+    "publish_time": "2026-05-16 13:10:34",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a06eaf1000000003701c475?xhsshare=CopyLink&type=video",
+    "title": "测一测，你的天赋职业是什么？",
+    "estimated_views": 183370,
+    "likes": 551,
+    "saves": 336,
+    "comments": 5976,
+    "shares": 65,
+    "publish_time": "2026-05-15 17:44:17",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0558af00000000380371d8?xhsshare=CopyLink&type=video",
+    "title": "测一测，你是恋爱脑or事业脑？",
+    "estimated_views": 110534,
+    "likes": 160,
+    "saves": 54,
+    "comments": 3715,
+    "shares": 27,
+    "publish_time": "2026-05-14 13:07:59",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a04067b00000000360321cc?xhsshare=CopyLink&type=video",
+    "title": "👀测一测你的心动开关",
+    "estimated_views": 12212,
+    "likes": 17,
+    "saves": 3,
+    "comments": 414,
+    "shares": 2,
+    "publish_time": "2026-05-13 13:04:59",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a02b9ce0000000037036d83?xhsshare=CopyLink&type=video",
+    "title": "测一测，你的颜值等级有多高？",
+    "estimated_views": 66619,
+    "likes": 162,
+    "saves": 78,
+    "comments": 2223,
+    "shares": 3,
+    "publish_time": "2026-05-12 13:25:34",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a01733800000000370351c0?xhsshare=CopyLink&type=video",
+    "title": "测一测，你适合姐弟恋还是大叔恋？",
+    "estimated_views": 380397,
+    "likes": 496,
+    "saves": 187,
+    "comments": 12717,
+    "shares": 175,
+    "publish_time": "2026-05-11 14:12:08",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a008b4f000000003802215f?xhsshare=CopyLink&type=video",
+    "title": "你的习惯已经替你选好了城市！",
+    "estimated_views": 449855,
+    "likes": 479,
+    "saves": 130,
+    "comments": 15080,
+    "shares": 229,
+    "publish_time": "2026-05-10 21:42:39",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/6a0006d2000000003603035c?xhsshare=CopyLink&type=video",
+    "title": "其实你已经很棒了",
+    "estimated_views": 139715,
+    "likes": 473,
+    "saves": 124,
+    "comments": 4588,
+    "shares": 31,
+    "publish_time": "2026-05-10 12:17:22",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69ff48880000000037035774?xhsshare=CopyLink&type=video",
+    "title": "测一测，你有富婆思维吗？",
+    "estimated_views": 27447,
+    "likes": 43,
+    "saves": 22,
+    "comments": 924,
+    "shares": 4,
+    "publish_time": "2026-05-09 22:45:28",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69fec2450000000036032c53?xhsshare=CopyLink&type=video",
+    "title": "测一测，你最容易对哪类人心动？",
+    "estimated_views": 39982,
+    "likes": 39,
+    "saves": 23,
+    "comments": 1348,
+    "shares": 11,
+    "publish_time": "2026-05-09 13:12:37",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69fd72bc000000003601cfc7?xhsshare=CopyLink&type=video",
+    "title": "你是吸渣体质还是被宠体质？",
+    "estimated_views": 17714,
+    "likes": 20,
+    "saves": 7,
+    "comments": 605,
+    "shares": 0,
+    "publish_time": "2026-05-08 13:21:00",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69fc2030000000003601dd92?xhsshare=CopyLink&type=video",
+    "title": "一些很重要但没人教的能力",
+    "estimated_views": 54993,
+    "likes": 167,
+    "saves": 82,
+    "comments": 1797,
+    "shares": 13,
+    "publish_time": "2026-05-07 13:16:32",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69facf63000000003701c375?xhsshare=CopyLink&type=video",
+    "title": "测一测，未来大家羡慕你什么？",
+    "estimated_views": 14701,
+    "likes": 21,
+    "saves": 13,
+    "comments": 494,
+    "shares": 2,
+    "publish_time": "2026-05-06 13:19:31",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f88cab0000000038022598?xhsshare=CopyLink&type=video",
+    "title": "测一测，谁最疼你？",
+    "estimated_views": 51888,
+    "likes": 82,
+    "saves": 38,
+    "comments": 1743,
+    "shares": 12,
+    "publish_time": "2026-05-04 20:10:19",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f6d8ee0000000038036fac?xhsshare=CopyLink&type=video",
+    "title": "测测，你的奥德赛时期在几岁？",
+    "estimated_views": 13648,
+    "likes": 18,
+    "saves": 8,
+    "comments": 462,
+    "shares": 2,
+    "publish_time": "2026-05-03 13:11:10",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f58985000000003601f92d?xhsshare=CopyLink&type=video",
+    "title": "测测，你是软柿子还是硬骨头？",
+    "estimated_views": 199739,
+    "likes": 412,
+    "saves": 134,
+    "comments": 6673,
+    "shares": 46,
+    "publish_time": "2026-05-02 13:20:05",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f4726f000000003701f9e9?xhsshare=CopyLink&type=video",
+    "title": "你适合热烈的爱还是细水长流？",
+    "estimated_views": 15086,
+    "likes": 22,
+    "saves": 6,
+    "comments": 509,
+    "shares": 2,
+    "publish_time": "2026-05-01 17:29:19",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f43bb40000000038035b59?xhsshare=CopyLink&type=video",
+    "title": "测一测，你天生适合哪种伴侣！",
+    "estimated_views": 29021,
+    "likes": 51,
+    "saves": 24,
+    "comments": 965,
+    "shares": 13,
+    "publish_time": "2026-05-01 13:35:48",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f3245d00000000380379be?xhsshare=CopyLink&type=video",
+    "title": "被喜欢是有征兆的",
+    "estimated_views": 376293,
+    "likes": 1074,
+    "saves": 235,
+    "comments": 12434,
+    "shares": 22,
+    "publish_time": "2026-04-30 17:43:57",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f2e61a000000003701ceb0?xhsshare=CopyLink&type=video",
+    "title": "你的占有欲你打几分？",
+    "estimated_views": 98642,
+    "likes": 203,
+    "saves": 66,
+    "comments": 3238,
+    "shares": 70,
+    "publish_time": "2026-04-30 13:18:18",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f19556000000003601c3a9?xhsshare=CopyLink&type=video",
+    "title": "测一测，你能上嫁吗？",
+    "estimated_views": 76088,
+    "likes": 72,
+    "saves": 21,
+    "comments": 2600,
+    "shares": 1,
+    "publish_time": "2026-04-29 13:21:26",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69f043ab000000003601cae7?xhsshare=CopyLink&type=video",
+    "title": "你适合年上还是年下？",
+    "estimated_views": 486618,
+    "likes": 1027,
+    "saves": 256,
+    "comments": 16215,
+    "shares": 169,
+    "publish_time": "2026-04-28 13:20:43",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69eef326000000003601bf9a?xhsshare=CopyLink&type=video",
+    "title": "测一测，你骨子里想要的生活长什么样？",
+    "estimated_views": 208339,
+    "likes": 364,
+    "saves": 138,
+    "comments": 6981,
+    "shares": 46,
+    "publish_time": "2026-04-27 13:24:54",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69eafc3f0000000020003803?xhsshare=CopyLink&type=video",
+    "title": "测一测，你天生适合吃哪碗饭",
+    "estimated_views": 175328,
+    "likes": 617,
+    "saves": 166,
+    "comments": 5759,
+    "shares": 25,
+    "publish_time": "2026-04-24 13:14:39",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e9b1b1000000001a023b05?xhsshare=CopyLink&type=video",
+    "title": "测一测，你与哪类人注定合不来！",
+    "estimated_views": 396715,
+    "likes": 595,
+    "saves": 203,
+    "comments": 13340,
+    "shares": 89,
+    "publish_time": "2026-04-23 13:44:18",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "[这是一个测试品牌]",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e855da00000000210133cf?xhsshare=CopyLink&type=video",
+    "title": "你不是看走眼，是你把别人想太好！",
+    "estimated_views": 58436,
+    "likes": 104,
+    "saves": 29,
+    "comments": 1969,
+    "shares": 7,
+    "publish_time": "2026-04-22 13:00:10",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e757d3000000002102dbda?xhsshare=CopyLink&type=video",
+    "title": "你可能自己都不知道自己的潜力！",
+    "estimated_views": 66638,
+    "likes": 203,
+    "saves": 68,
+    "comments": 2201,
+    "shares": 10,
+    "publish_time": "2026-04-21 18:56:19",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e708e5000000001a033e7a?xhsshare=CopyLink&type=video",
+    "title": "来！看看你的边界感有多强！",
+    "estimated_views": 180820,
+    "likes": 561,
+    "saves": 138,
+    "comments": 5956,
+    "shares": 51,
+    "publish_time": "2026-04-21 13:19:33",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e5bf01000000002102f2ad?xhsshare=CopyLink&type=video",
+    "title": "测一下：你是大佬预备役吗？",
+    "estimated_views": 30967,
+    "likes": 36,
+    "saves": 16,
+    "comments": 1048,
+    "shares": 5,
+    "publish_time": "2026-04-20 13:52:01",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e1c1ec000000001a025984?xhsshare=CopyLink&type=video",
+    "title": "测一测，你今年会有啥重大突破",
+    "estimated_views": 48315,
+    "likes": 60,
+    "saves": 28,
+    "comments": 1632,
+    "shares": 7,
+    "publish_time": "2026-04-17 13:15:24",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69e07d26000000002102cb00?xhsshare=CopyLink&type=video",
+    "title": "测一测，你的人生高光在几岁？",
+    "estimated_views": 147512,
+    "likes": 192,
+    "saves": 80,
+    "comments": 4945,
+    "shares": 12,
+    "publish_time": "2026-04-16 14:09:42",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69df20ac000000001a024de9?xhsshare=CopyLink&type=video",
+    "title": "我好像发现了魅力的本质",
+    "estimated_views": 65945,
+    "likes": 62,
+    "saves": 33,
+    "comments": 2251,
+    "shares": 3,
+    "publish_time": "2026-04-15 13:22:52",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69ddcc94000000002103a047?xhsshare=CopyLink&type=video",
+    "title": "TA现在对你什么心思｜心理测试",
+    "estimated_views": 147829,
+    "likes": 78,
+    "saves": 28,
+    "comments": 5071,
+    "shares": 5,
+    "publish_time": "2026-04-14 13:11:48",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69dc8d75000000002103bd3b?xhsshare=CopyLink&type=video",
+    "title": "一分钟，剥离你的爱情底色",
+    "estimated_views": 3237,
+    "likes": 4,
+    "saves": 2,
+    "comments": 109,
+    "shares": 1,
+    "publish_time": "2026-04-13 14:30:13",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  },
+  {
+    "url": "https://www.xiaohongshu.com/explore/69d9e1e90000000021010cf2?xhsshare=CopyLink&type=video",
+    "title": "一分钟测出你天生适合吃哪碗饭！",
+    "estimated_views": 479345,
+    "likes": 1056,
+    "saves": 514,
+    "comments": 15718,
+    "shares": 176,
+    "publish_time": "2026-04-11 13:53:45",
+    "link": "--",
+    "is_commercial": "否",
+    "has_product_tag": "--",
+    "mentioned_brands": "--",
+    "is_paid_promotion": "否"
+  }
+];
+</script>
+<script>
+(function(){
+function safeInt(v,d){d=d||0;try{var n=parseInt(v);return isNaN(n)?d:n;}catch(e){return d;}}
+
+var notes=RAW_DATA.map(function(r,i){return{
+  id:i,title:r.title||'',views:safeInt(r.estimated_views),
+  likes:safeInt(r.likes),saves:safeInt(r.saves),
+  comments:safeInt(r.comments),shares:safeInt(r.shares),
+  time:r.publish_time||''
+};}).filter(function(r){return r.title&&r.views>0;});
+
+notes.sort(function(a,b){return b.views-a.views;});
+
+// Categorization
+var PATTERNS={
+  '二选一困境':['换工作','换活法','继续等','主动追','心动','合适'],
+  '人格分类':['你是哪种','人格','类型'],
+  '测试承诺':['测一测','测测'],
+  '命运揭示':['决定了','已经替你','暴露了'],
+  '好奇驱动':['其实','原来','到底','为什么'],
+  '情感共鸣':['失恋','分手','前任','渣','受伤'],
+  '金钱关系':['花钱','金钱','AA','付费','物质'],
+  '职场成长':['工作','职场','辞职','加班','老板'],
+  '关系矛盾':['吵架','冷战','嫉妒','占有'],
+  '自我探索':['发现','找到','认识自己','了解自己']
+};
+
+function classify(t){
+  for(var c in PATTERNS)
+    for(var i=0;i<PATTERNS[c].length;i++)
+      if(t.indexOf(PATTERNS[c][i])>=0)return c;
+  return '其他';
+}
+
+function broad(t){
+  if(/爱|恋|情|追|伴侣|结婚|分手|前任|渣|依赖/.test(t))return'恋爱';
+  if(/工作|职|加班|老板|辞职|上班|工资|创业/.test(t))return'职场';
+  if(/人|性格|自己|我|内向|外向/.test(t))return'人格';
+  return'其他';
+}
+
+notes.forEach(function(n){
+  n.cat=classify(n.title);n.broad=broad(n.title);
+  n.eng=n.views>0?((n.likes+n.saves+n.comments+n.shares)/n.views*100):0;
+  n.engF=n.eng.toFixed(2)+'%';
+});
+var thresh=notes[Math.floor(notes.length*0.2)].views;
+notes.forEach(function(n){n.hot=n.views>=thresh;});
+
+// Stats
+var tv=0,tl=0,tc=0;notes.forEach(function(n){tv+=n.views;tl+=n.likes;tc+=n.comments;});
+var avgV=Math.round(tv/notes.length);
+var avgE=(notes.reduce(function(s,n){return s+n.eng;},0)/notes.length).toFixed(2);
+var hn=notes.filter(function(n){return n.hot;});
+
+document.getElementById('statsRow').innerHTML=[
+  {n:notes.length,l:'笔记总数',s:''},
+  {n:(tv/10000).toFixed(1)+'万',l:'总阅读量',s:''},
+  {n:avgV.toLocaleString(),l:'篇均阅读',s:''},
+  {n:avgE+'%',l:'平均互动率',s:'点赞+收藏+评论+分享'},
+  {n:hn.length,l:'爆款笔记',s:'Top 20%'},
+  {n:tc.toLocaleString(),l:'总评论数',s:''}
+].map(function(s){return'<div class="stat-card"><div class="num">'+s.n+'</div><div class="label">'+s.l+'</div><div class="sub">'+s.s+'</div></div>';}).join('');
+
+// Insights
+var hE=hn.reduce(function(s,n){return s+n.eng;},0)/hn.length;
+var cE=notes.filter(function(n){return!n.hot;}).reduce(function(s,n){return s+n.eng;},0)/notes.filter(function(n){return!n.hot;}).length;
+
+var catV={},catC={};
+notes.forEach(function(n){catV[n.cat]=(catV[n.cat]||0)+n.views;catC[n.cat]=(catC[n.cat]||0)+1;});
+var bc='',ba=0;
+for(var c in catV){var a=catV[c]/catC[c];if(a>ba){ba=a;bc=c;}}
+
+document.getElementById('insightsList').innerHTML=[
+  '<span class="red">爆款互动率: '+hE.toFixed(2)+'%</span> vs 普通: '+cE.toFixed(2)+'% — <b>'+(hE/cE).toFixed(1)+'倍</b>',
+  '<span class="gold">最高流量类别: '+bc+'</span>，篇均 '+Math.round(ba).toLocaleString()+' 阅读',
+  'Top 1 爆款占总流量 '+(notes[0].views/tv*100).toFixed(1)+'%',
+  '前5篇贡献总流量 '+(notes.slice(0,5).reduce(function(s,n){return s+n.views;},0)/tv*100).toFixed(1)+'% — <b>头部效应明显</b>',
+  '<span class="blue">评论数远超收藏分享</span>，适合做评论区引流'
+].map(function(i){return'<li>'+i+'</li>';}).join('');
+
+// Charts
+var catColors=['#2B3957','#4A6FA5','#6B8E7F','#D97757','#E8A87C','#95A5A6','#3498DB','#9B59B6','#1ABC9C','#F39C12'];
+
+var cl=Object.keys(catV);
+new Chart(document.getElementById('chartCategory'),{
+  type:'doughnut',
+  data:{labels:cl,datasets:[{data:cl.map(function(c){return catV[c];}),backgroundColor:catColors.slice(0,cl.length),borderWidth:0}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'bottom',labels:{padding:16,usePointStyle:true}}}}
+});
+
+new Chart(document.getElementById('chartEngagement'),{
+  type:'bar',
+  data:{labels:['爆款笔记','普通笔记'],datasets:[{label:'互动率(%)',data:[parseFloat(hE.toFixed(2)),parseFloat(cE.toFixed(2))],backgroundColor:['#E74C3C','#95A5A6'],borderRadius:8}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+
+new Chart(document.getElementById('chartScatter'),{
+  type:'scatter',
+  data:{datasets:[{label:'笔记',data:notes.map(function(n){return{x:Math.log10(Math.max(n.views,1)),y:n.eng};}),
+    backgroundColor:notes.map(function(n){return n.hot?'#E74C3C':'#95A5A6';}),pointRadius:5,pointHoverRadius:8}]},
+  options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},
+    tooltip:{callbacks:{label:function(ctx){var n=notes[ctx.dataIndex];return n.title.substring(0,30)+': '+n.views.toLocaleString()+' views';}}}},
+    scales:{x:{title:{display:true,text:'阅读量 (log10)'}},y:{title:{display:true,text:'互动率 (%)'}}}}
+});
+
+// Formula performance
+var fKeys=Object.keys(catV).sort(function(a,b){return(catV[b]/catC[b])-(catV[a]/catC[a]);});
+var fAvg={};fKeys.forEach(function(k){fAvg[k]=Math.round(catV[k]/catC[k]);});
+
+new Chart(document.getElementById('chartFormula'),{
+  type:'bar',
+  data:{labels:fKeys,datasets:[{label:'篇均阅读',data:fKeys.map(function(k){return fAvg[k];}),backgroundColor:fKeys.map(function(k,i){return catColors[i%catColors.length];}),borderRadius:8}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'篇均阅读量'}}}}
+});
+
+// TOP TABLE
+var tbody='';
+notes.slice(0,20).forEach(function(n,i){
+  tbody+='<tr><td><b>'+(i+1)+'</b></td><td title="'+n.title.replace(/"/g,'&quot;')+'">'+n.title.substring(0,30)+(n.title.length>30?'...':'')+'</td><td>'+n.views.toLocaleString()+'</td><td>'+n.likes.toLocaleString()+'</td><td>'+n.saves.toLocaleString()+'</td><td>'+n.comments.toLocaleString()+'</td><td>'+n.shares.toLocaleString()+'</td><td><span class="badge '+(n.eng>5?'badge-hot':n.eng>2?'badge-good':'badge-normal')+'">'+n.engF+'</span></td><td>'+n.cat+'</td></tr>';
+});
+document.querySelector('#topTable tbody').innerHTML=tbody;
+
+// Strategy
+var bV={},bC={},bE={};
+notes.forEach(function(n){bV[n.broad]=(bV[n.broad]||0)+n.views;bC[n.broad]=(bC[n.broad]||0)+1;bE[n.broad]=(bE[n.broad]||0)+n.eng;});
+
+var sh='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;">';
+for(var b in bV){
+  sh+='<div style="padding:16px;background:#f8f9fb;border-radius:8px;"><div style="font-size:15px;font-weight:600;color:#2B3957;margin-bottom:8px;">'+b+'类</div><div style="font-size:13px;color:#666;">篇数: '+bC[b]+' | 篇均: '+Math.round(bV[b]/bC[b]).toLocaleString()+' | 互动率: '+(bE[b]/bC[b]).toFixed(2)+'%</div></div>';
+}
+sh+='</div>';
+
+sh+='<div style="margin-top:20px;padding:16px;background:#EAF2F8;border-radius:8px;"><div style="font-weight:600;color:#2980B9;margin-bottom:8px;">🎯 标题公式排名</div>';
+fKeys.slice(0,5).forEach(function(k,i){sh+='<div style="padding:4px 0;font-size:14px;"><b>'+(i+1)+'.</b> '+k+' — 篇均 '+fAvg[k].toLocaleString()+' ('+catC[k]+'篇)</div>';});
+sh+='</div>';
+
+sh+='<div style="margin-top:20px;padding:16px;background:#FDEDEC;border-radius:8px;"><div style="font-weight:600;color:#E74C3C;margin-bottom:8px;">⚠ 发布策略建议</div><ol style="font-size:14px;line-height:2;margin-left:18px;"><li><b>坚定不移用最强公式</b>: '+fKeys[0]+' 标题公式篇均阅读最高</li><li><b>二选一困境是流量密码</b>: 制造悬念天然引发点击</li><li><b>每天1篇即可</b>: 频率稳定比高频更重要</li><li><b>评论区引流</b>: 评论远多于收藏分享，宜评论区置顶测试链接</li><li><b>头部效应明显</b>: 爆款可复用结构到新选题</li></ol></div>';
+
+document.getElementById('strategyContent').innerHTML=sh;
+})();
+</script>
+</body>
+</html>

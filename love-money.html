@@ -704,7 +704,7 @@ body {
   <!-- SHARE CARD (hidden) -->
   <div class="share-card" id="shareCard"></div>
 
-  <!-- TOAST -->
+    <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
 </div>
@@ -920,10 +920,10 @@ function escHtml(s) {
 function renderResult() {
   const r = resultData.type;
   const dims = resultData.dimensions;
-
   let html = '';
 
-  // ============ 1. 诊断报告卡 (4 rows) ============
+
+  // 1. 诊断报告卡 (4 rows)
   html += '<div class="report-card">';
   html += '<div class="report-card-title"><span class="report-card-title-icon">🛡</span>人生诊断报告</div>';
   const stage = r.stage || '—';
@@ -938,7 +938,7 @@ function renderResult() {
   `;
   html += '</div>';
 
-  // ============ 2. 雷达图 + 状态总览 ============
+  // 2. 雷达图 + 状态总览
   if (config.dimensions.length >= 3) {
     html += `
     <div class="report-card radar-card">
@@ -949,7 +949,8 @@ function renderResult() {
     </div>`;
   }
 
-  // ============ 3. 深度分析 ============
+
+  // 3. 深度分析
   if (r.deepAnalysis) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">🔍</span>深度分析</div>';
@@ -958,7 +959,7 @@ function renderResult() {
     html += '</div>';
   }
 
-  // ============ 4. 真实消耗来源 ============
+  // 4. 真实消耗来源
   if (r.drainSources && r.drainSources.length > 0) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">⚠</span>你的真实消耗来源</div>';
@@ -972,7 +973,7 @@ function renderResult() {
     html += '</div>';
   }
 
-  // ============ 5. 优势 / 隐藏优势 ============
+  // 5. 优势 / 隐藏优势
   if (r.strengths && r.strengths.length > 0) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">💪</span>你的核心优势</div>';
@@ -987,7 +988,7 @@ function renderResult() {
     html += '</div>';
   }
 
-  // ============ 6. 最不该做的事 / 风险警示 ============
+  // 6. 最不该做的事 / 风险警示
   if (r.avoid) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title" style="color:var(--warn);"><span class="report-card-title-icon" style="color:var(--warn);">!</span>你现在最不该做</div>';
@@ -995,7 +996,7 @@ function renderResult() {
     html += '</div>';
   }
 
-  // ============ 7. 盲区 ============
+  // 7. 盲区
   if (r.blindSpots && r.blindSpots.length > 0) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">◌</span>你的盲区</div>';
@@ -1009,7 +1010,7 @@ function renderResult() {
     html += '</div>';
   }
 
-  // ============ 8. 未来推演 (双列) ============
+  // 8. 未来推演 (双列)
   if (r.futureNoChange || r.futureChange) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">↗</span>未来推演</div>';
@@ -1025,7 +1026,7 @@ function renderResult() {
     html += '</div></div>';
   }
 
-  // ============ 9. 30天行动路线图 ============
+  // 9. 30天行动路线图
   if (r.actionPlan && r.actionPlan.length > 0) {
     html += '<div class="report-card">';
     html += '<div class="report-card-title"><span class="report-card-title-icon">◎</span>未来30天行动路线图</div>';
@@ -1046,7 +1047,7 @@ function renderResult() {
     html += '</div></div>';
   }
 
-  // ============ 10. 收束句 ============
+  // 10. 收束句
   if (r.closing) {
     html += '<div class="report-card" style="text-align:center;background:var(--ink-7);">';
     html += `<p style="font-size:15px;line-height:1.85;color:var(--ink);font-weight:500;">${escHtml(r.closing)}</p>`;
@@ -1054,6 +1055,8 @@ function renderResult() {
   }
 
   document.getElementById('resultBody').innerHTML = html;
+
+
   setTimeout(renderRadarChart, 100);
 }
 

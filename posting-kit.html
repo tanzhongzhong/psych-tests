@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>橘猫的答案箱 - 小红书发布套件</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+.header {
+  background: linear-gradient(135deg, #2B3957 0%, #D97757 100%);
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+.header h1 { font-size: 32px; margin-bottom: 10px; }
+.header p { opacity: 0.9; font-size: 16px; }
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px 20px;
+}
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+.tab {
+  padding: 10px 20px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+.tab.active { background: #2B3957; color: white; border-color: #2B3957; }
+.tab:hover { background: #f0f0f0; }
+.tab.active:hover { background: #2B3957; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.card-date {
+  background: #2B3957;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.card-category {
+  background: #f0f0f0;
+  color: #666;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #2B3957;
+  margin-bottom: 12px;
+}
+.cover-preview {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+.body-text {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 15px;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+  border: 1px solid #eee;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.btn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-primary { background: #2B3957; color: white; }
+.btn-primary:hover { background: #1e2a40; }
+.btn-secondary { background: #f0f0f0; color: #333; }
+.btn-secondary:hover { background: #e0e0e0; }
+.guide {
+  background: #fff8f0;
+  border-left: 4px solid #D97757;
+  padding: 20px;
+  border-radius: 0 12px 12px 0;
+  margin-bottom: 25px;
+}
+.guide h2 { color: #2B3957; margin-bottom: 12px; font-size: 20px; }
+.guide ol { margin-left: 20px; }
+.guide li { margin-bottom: 8px; }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.stat-number { font-size: 28px; font-weight: 700; color: #2B3957; }
+.stat-label { font-size: 13px; color: #888; margin-top: 5px; }
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.filter-btn.active { background: #D97757; color: white; border-color: #D97757; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>橘猫的答案箱 · 小红书发布套件</h1>
+  <p>已生成 20 篇笔记 + 封面图 + 发布排期</p>
+</div>
+
+<div class="container">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-number">20</div>
+      <div class="stat-label">篇笔记</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">20</div>
+      <div class="stat-label">张封面</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">20</div>
+      <div class="stat-label">天排期</div>
+    </div>
+  </div>
+
+  <div class="guide">
+    <h2>发布方式</h2>
+    <ol>
+      <li>点击下方「复制正文」按钮，复制当天笔记内容</li>
+      <li>右键封面图「图片另存为」，保存到本地</li>
+      <li>打开小红书 App 或创作服务平台（creator.xiaohongshu.com）</li>
+      <li>上传封面图，粘贴标题和正文，添加对应话题标签</li>
+      <li>发布时记得在评论区置顶测试链接：<span id="base-link">https://tanzhongzhong.github.io/psych-tests/</span></li>
+    </ol>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('schedule')">发布排期</div>
+    <div class="tab" onclick="showTab('career')">职业类</div>
+    <div class="tab" onclick="showTab('love')">恋爱类</div>
+    <div class="tab" onclick="showTab('all')">全部列表</div>
+  </div>
+
+  <div id="schedule" class="tab-content active"></div>
+  <div id="career" class="tab-content"></div>
+  <div id="love" class="tab-content"></div>
+  <div id="all" class="tab-content"></div>
+</div>
+
+<script>
+const posts = [{"id": "career-energy", "date": "2026-07-03", "category": "career", "title": "你的精力，其实都耗在了不该消耗的地方？", "body": "你有没有这种感觉：\n\n周围人都说\"挺好的\"，但你自己知道不对劲。\n想辞职又不敢，不辞职又不甘心。\n每天上班像上坟，下班像刑满释放。\n\n来，做一个测试。\n34道题，3分钟，测出你的「职场能量被什么消耗」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #职业规划 #职场困惑 #换工作 #职业测试", "link": "https://tanzhongzhong.github.io/psych-tests/career-energy.html"}, {"id": "age-gap", "date": "2026-07-04", "category": "love", "title": "测一测，你适合找大叔还是小奶狗？", "body": "一个扎心的真相：\n\n你以为是运气问题，其实不是。\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n爱得越深，伤得越重。到底是哪里出了问题？\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「你适合找年上还是年下」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n评论区打出你的选项，答案在下一期揭晓。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/age-gap.html"}, {"id": "first-love", "date": "2026-07-05", "category": "life_decision", "title": "测一测，你的初恋阴影还在影响现在的爱情吗？", "body": "停下来3秒，问问你自己：\n\n有些路看起来对，走上去才发现是死胡同。\n站在十字路口的感觉，你懂吗？\n人生最大的浪费，不是选错，是不选。\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「白月光在你心里待了多久」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #人生选择 #困惑 #方向 #决定", "link": "https://tanzhongzhong.github.io/psych-tests/first-love.html"}, {"id": "career-mismatch", "date": "2026-07-06", "category": "career", "title": "你该换工作，还是换活法？", "body": "说真的，\n\n周围人都说\"挺好的\"，但你自己知道不对劲。\n工作还行，但就是提不起劲。\n每天上班像上坟，下班像刑满释放。\n\n来，做一个测试。\n34道题，3分钟，测出你的「职业错位了吗」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #职业规划 #职场困惑 #换工作 #职业测试", "link": "https://tanzhongzhong.github.io/psych-tests/career-mismatch.html"}, {"id": "attachment", "date": "2026-07-07", "category": "love", "title": "你是哪种依恋类型？焦虑型还是回避型", "body": "你是不是也这样：\n\n为什么总被同一种人吸引？\n明明条件不差，但就是遇不到对的人。\n爱得越深，伤得越重。到底是哪里出了问题？\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「依恋类型是什么」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/attachment.html"}, {"id": "quit-decision", "date": "2026-07-08", "category": "self", "title": "测一测，你该不该辞职？", "body": "其实大部分人都在将就。\n\n大多数人对自己的了解，不超过20%。\n你的选择，真的是你自己的选择吗？\n你以为你在做自己，其实一直在演别人。\n\n来，做一个测试。\n34道题，3分钟，测出你的「现在该不该跳槽」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n点个关注，不错过答案。\n\n#心理测试 #橘猫的答案箱 #妙答 #自我成长 #认识自己 #心理测试 #个人提升", "link": "https://tanzhongzhong.github.io/psych-tests/quit-decision.html"}, {"id": "entrepreneurship", "date": "2026-07-09", "category": "career", "title": "测一测，你适合创业还是打工？", "body": "你有没有这种感觉：\n\n周围人都说\"挺好的\"，但你自己知道不对劲。\n每天上班像上坟，下班像刑满释放。\n看着别人发光，自己却在将就。\n\n来，做一个测试。\n34道题，3分钟，测出你的「你适合创业还是打工」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #职业规划 #职场困惑 #换工作 #职业测试", "link": "https://tanzhongzhong.github.io/psych-tests/entrepreneurship.html"}, {"id": "heart-vs-fit", "date": "2026-07-10", "category": "love", "title": "你会嫁给心动的人，还是合适的人？", "body": "一个扎心的真相：\n\n爱得越深，伤得越重。到底是哪里出了问题？\n你以为是运气问题，其实不是。\n为什么总被同一种人吸引？\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「心动型VS适配型，你更适合哪种」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n在评论区留下你的字母，关注我看答案。\n\n喜欢就收藏，下次方便找。关注我，解锁更多测试。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/heart-vs-fit.html"}, {"id": "recovery", "date": "2026-07-11", "category": "self", "title": "测一测，你需要多久才能走出情伤？", "body": "你有没有这种感觉：\n\n你以为你在做自己，其实一直在演别人。\n你的选择，真的是你自己的选择吗？\n大多数人对自己的了解，不超过20%。\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「你分手后多久能走出来」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n在评论区留下你的字母，关注我看答案。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #自我成长 #认识自己 #心理测试 #个人提升", "link": "https://tanzhongzhong.github.io/psych-tests/recovery.html"}, {"id": "work-energy", "date": "2026-07-12", "category": "career", "title": "测一测，你的职业倦怠到第几级了？", "body": "你有没有想过这个问题：\n\n看着别人发光，自己却在将就。\n每天上班像上坟，下班像刑满释放。\n工作还行，但就是提不起劲。\n\n来，做一个测试。\n34道题，3-5分钟，测出你的「工作能量还剩多少」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n喜欢就收藏，下次方便找。关注我，解锁更多测试。\n\n#心理测试 #橘猫的答案箱 #妙答 #职业规划 #职场困惑 #换工作 #职业测试", "link": "https://tanzhongzhong.github.io/psych-tests/work-energy.html"}, {"id": "hypergamy", "date": "2026-07-13", "category": "love", "title": "测一测，你有向上社交的潜力吗？", "body": "我发现了一个规律：\n\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n爱得越深，伤得越重。到底是哪里出了问题？\n明明条件不差，但就是遇不到对的人。\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「上嫁潜质有多高」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n在评论区留下你的字母，关注我看答案。\n\n点个关注，不错过答案。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/hypergamy.html"}, {"id": "toxic-attract", "date": "2026-07-14", "category": "self", "title": "你的磁场，其实决定了你会吸引什么类型的人？", "body": "你是不是也这样：\n\n你想要的，和你真正需要的，可能完全不一样。\n你以为你在做自己，其实一直在演别人。\n大多数人对自己的了解，不超过20%。\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「吸渣体质」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n点个关注，不错过答案。\n\n#心理测试 #橘猫的答案箱 #妙答 #自我成长 #认识自己 #心理测试 #个人提升", "link": "https://tanzhongzhong.github.io/psych-tests/toxic-attract.html"}, {"id": "work-personality", "date": "2026-07-15", "category": "career", "title": "你是哪种职场人格？掌控者还是老好人", "body": "停下来3秒，问问你自己：\n\n周围人都说\"挺好的\"，但你自己知道不对劲。\n每天上班像上坟，下班像刑满释放。\n看着别人发光，自己却在将就。\n\n来，做一个测试。\n34道题，3分钟，测出你的「职场人格类型」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #职业规划 #职场困惑 #换工作 #职业测试", "link": "https://tanzhongzhong.github.io/psych-tests/work-personality.html"}, {"id": "long-distance", "date": "2026-07-16", "category": "love", "title": "测一测，你们的异地恋能走多远？", "body": "说真的，\n\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n你以为是运气问题，其实不是。\n为什么总被同一种人吸引？\n\n来，做一个测试。\n34道题，3分钟，测出你的「异地恋能撑多久」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n评论区打出你的选项，答案在下一期揭晓。\n\n喜欢就收藏，下次方便找。关注我，解锁更多测试。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/long-distance.html"}, {"id": "love-control", "date": "2026-07-17", "category": "love", "title": "测一测，你在感情里掌控欲有多强？", "body": "我发现了一个规律：\n\n明明条件不差，但就是遇不到对的人。\n爱得越深，伤得越重。到底是哪里出了问题？\n为什么总被同一种人吸引？\n\n来，做一个测试。\n34道题，3分钟，测出你的「恋爱控制欲有多强」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n点个关注，不错过答案。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/love-control.html"}, {"id": "love-money", "date": "2026-07-18", "category": "love", "title": "测一测，恋爱中你的金钱观是加分项还是炸弹？", "body": "先别划走。\n\n为什么总被同一种人吸引？\n你以为是运气问题，其实不是。\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n\n来，做一个测试。\n34道题，3分钟，测出你的「恋爱中金钱观是什么」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n在评论区留下你的字母，关注我看答案。\n\n喜欢就收藏，下次方便找。关注我，解锁更多测试。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/love-money.html"}, {"id": "love-secret", "date": "2026-07-19", "category": "love", "title": "你的恋爱模式，其实暴露了你的童年缺失？", "body": "说真的，\n\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n为什么总被同一种人吸引？\n爱得越深，伤得越重。到底是哪里出了问题？\n\n来，做一个测试。\n34道题，3分钟，测出你的「恋爱中你最不敢展现的一面」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n你的答案是什么？评论区见。\n\n关注我 @橘猫的答案箱，每天一个测试，更了解自己。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/love-secret.html"}, {"id": "love-type", "date": "2026-07-20", "category": "love", "title": "你是哪种恋爱人格？", "body": "其实大部分人都在将就。\n\n爱得越深，伤得越重。到底是哪里出了问题？\n为什么总被同一种人吸引？\n每次谈恋爱都像复制粘贴，同样的剧情反复上演。\n\n来，做一个测试。\n34道题，3分钟，测出你的「恋爱人格类型」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/love-type.html"}, {"id": "possessiveness", "date": "2026-07-21", "category": "love", "title": "测一测，你的占有欲会让伴侣窒息吗？", "body": "说真的，\n\n你以为是运气问题，其实不是。\n爱得越深，伤得越重。到底是哪里出了问题？\n为什么总被同一种人吸引？\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「占有欲有多强」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/possessiveness.html"}, {"id": "younger-love", "date": "2026-07-22", "category": "love", "title": "测一测，你适合姐弟恋吗？", "body": "你有没有想过这个问题：\n\n爱得越深，伤得越重。到底是哪里出了问题？\n你以为是运气问题，其实不是。\n明明条件不差，但就是遇不到对的人。\n\n来，做一个测试。\n34道题，2-3分钟，测出你的「姐弟恋适配度有多高」\n\n每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。\n\n把答案打在评论区，我帮你看看。\n\n关注我，下一期揭晓每个选项对应的结果。\n\n#心理测试 #橘猫的答案箱 #妙答 #恋爱心理 #感情测试 #亲密关系 #恋爱困惑", "link": "https://tanzhongzhong.github.io/psych-tests/younger-love.html"}];
+
+function showTab(tabId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const original = btn.textContent;
+    btn.textContent = '已复制!';
+    setTimeout(() => btn.textContent = original, 1500);
+  });
+}
+
+function createCard(post, showDate = true) {
+  const categoryLabels = {
+    career: '职业规划', love: '恋爱心理', self: '自我成长', life_decision: '人生选择', personality: '人格测试'
+  };
+  return `
+    <div class="card" data-category="${post.category}">
+      <div class="card-header">
+        ${showDate ? `<span class="card-date">${post.date}</span>` : ''}
+        <span class="card-category">${categoryLabels[post.category] || post.category}</span>
+      </div>
+      <div class="card-title">${post.title}</div>
+      <img class="cover-preview" src="covers/${post.id}.png" alt="${post.title}">
+      <div class="body-text">${post.body.replace(/\n/g, '<br>')}</div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="copyText('${post.title}\\n\\n${post.body.replace(/'/g, "\\'")}', this)">复制正文</button>
+        <button class="btn btn-secondary" onclick="copyText('${post.link}', this)">复制测试链接</button>
+        <a class="btn btn-secondary" href="${post.link}" target="_blank">预览测试</a>
+      </div>
+    </div>
+  `;
+}
+
+function render() {
+  document.getElementById('schedule').innerHTML = posts.map(p => createCard(p, true)).join('');
+  document.getElementById('career').innerHTML = posts.filter(p => p.category === 'career').map(p => createCard(p, true)).join('');
+  document.getElementById('love').innerHTML = posts.filter(p => p.category === 'love').map(p => createCard(p, true)).join('');
+  document.getElementById('all').innerHTML = posts.map(p => createCard(p, true)).join('');
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>笔记生成器 — 橘猫的答案箱</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --primary: #2B3957;
+  --accent: #D97757;
+  --bg: #f5f3ef;
+  --card: #ffffff;
+  --text: #333;
+  --muted: #999;
+  --border: #e8e5e0;
+  --danger: #e74c3c;
+  --success: #27ae60;
+  --radius: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+body {
+  font-family: 'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Header */
+.header {
+  background: var(--primary);
+  color: #fff;
+  padding: 20px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header h1 { font-size: 24px; font-weight: 700; }
+.header .badge { 
+  background: rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px;
+  font-size: 13px;
+}
+.header .badge span { color: var(--accent); font-weight: 700; }
+
+/* Layout */
+.layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 20px;
+  padding: 20px 32px;
+  max-width: 1500px;
+  margin: 0 auto;
+  height: calc(100vh - 80px);
+}
+
+/* Sidebar */
+.sidebar {
+  display: flex; flex-direction: column; gap: 16px;
+  overflow: hidden;
+}
+.panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+}
+
+/* Test selector */
+.test-list {
+  max-height: 280px; overflow-y: auto;
+}
+.test-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  transition: all 0.15s;
+  border: 2px solid transparent;
+}
+.test-item:hover { background: #f0ede8; }
+.test-item.active { 
+  background: rgba(43,57,87,0.06); 
+  border-color: var(--primary);
+}
+.test-item .test-emoji { font-size: 22px; width: 36px; text-align: center; }
+.test-item .test-info { flex:1; min-width:0; }
+.test-item .test-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.test-item .test-cat { font-size: 11px; color: var(--muted); }
+.test-item .test-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(43,57,87,0.08); color: var(--primary); white-space: nowrap;
+}
+
+/* Formula selector */
+.formula-list {
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 200px; overflow-y: auto;
+}
+.formula-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  border: 2px solid transparent; transition: all 0.15s;
+}
+.formula-item:hover { background: #f0ede8; }
+.formula-item.active { 
+  background: rgba(43,57,87,0.06); border-color: var(--primary);
+}
+.formula-name { font-size: 13px; font-weight: 600; }
+.formula-note { font-size: 11px; color: var(--muted); }
+
+/* Title options */
+.title-options { 
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 250px; overflow-y: auto;
+}
+.title-option {
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  border: 2px solid var(--border); transition: all 0.15s;
+  font-size: 14px; line-height: 1.4;
+}
+.title-option:hover { border-color: var(--primary); background: rgba(43,57,87,0.03); }
+.title-option.selected { 
+  border-color: var(--primary); background: rgba(43,57,87,0.06);
+}
+.title-option .formula-label {
+  font-size: 10px; color: var(--accent); font-weight: 600; margin-bottom: 4px;
+}
+
+/* Main preview */
+.main {
+  display: flex; flex-direction: column; gap: 16px;
+  overflow: hidden;
+}
+.main .panel { flex: 1; display: flex; flex-direction: column; }
+.main .panel-body { flex: 1; overflow-y: auto; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 10px 20px; cursor: pointer; border: none; background: none;
+  font-size: 13px; color: var(--muted); font-weight: 600;
+  border-bottom: 2px solid transparent; transition: all 0.15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* Note preview */
+.note-preview {
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  line-height: 1.8;
+  font-size: 15px;
+  max-width: 600px;
+}
+.note-preview .note-title {
+  font-size: 20px; font-weight: 800; color: var(--primary);
+  margin-bottom: 16px; line-height: 1.4;
+}
+.note-preview .note-body { white-space: pre-line; }
+.note-preview .note-hashtags {
+  color: #5B8DEF; font-size: 13px; margin-top: 8px;
+}
+
+/* Cover preview */
+.cover-preview {
+  width: 300px; height: 400px;
+  border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  overflow: hidden; margin: 0 auto;
+}
+.cover-preview iframe {
+  width: 300px; height: 400px; border: none;
+}
+
+/* Edit panel */
+.edit-area { margin-bottom: 16px; }
+.edit-area label {
+  display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+  margin-bottom: 6px;
+}
+.edit-area textarea, .edit-area input {
+  width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+  border-radius: 8px; font-size: 14px; font-family: inherit;
+  resize: vertical; line-height: 1.6;
+}
+.edit-area textarea:focus, .edit-area input:focus {
+  outline: none; border-color: var(--primary);
+}
+.edit-area textarea { min-height: 200px; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn {
+  padding: 8px 18px; border-radius: 8px; border: none;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #1f2a42; }
+.btn-outline { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+.btn-outline:hover { background: rgba(43,57,87,0.06); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: #c46948; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-item {
+  background: rgba(43,57,87,0.03); padding: 10px 14px; border-radius: 8px;
+  text-align: center;
+}
+.stat-value { font-size: 18px; font-weight: 700; color: var(--primary); }
+.stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* Toast */
+.toast {
+  position: fixed; top: 20px; right: 20px; z-index: 9999;
+  background: var(--primary); color: #fff; padding: 12px 24px;
+  border-radius: 8px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease;
+  opacity: 0; transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+@keyframes slideIn {
+  from { transform: translateX(100px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Regen animation */
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.regenning { animation: pulse 0.6s infinite; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📝 小红书笔记生成器</h1>
+    <div style="font-size:12px;opacity:0.7;margin-top:4px;">基于 69 条笔记数据 · #1爆款模板拆解(155万阅读) · 橘猫的答案箱</div>
+  </div>
+  <div class="badge">
+    模板来源: <span>你该换工作，还是换活法？</span> 155万阅读
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Left: Controls -->
+  <div class="sidebar">
+    <!-- Test Selector -->
+    <div class="panel">
+      <div class="panel-header">📋 选择测试</div>
+      <div class="panel-body" style="padding:8px;">
+        <div class="test-list" id="testList"></div>
+      </div>
+    </div>
+
+    <!-- Formula Picker -->
+    <div class="panel">
+      <div class="panel-header">🎯 标题公式</div>
+      <div class="panel-body" style="padding:8px;">
+        <div class="formula-list" id="formulaList"></div>
+      </div>
+    </div>
+
+    <!-- Title Options -->
+    <div class="panel">
+      <div class="panel-header">💡 标题备选 <button class="btn btn-sm btn-outline" onclick="regenTitles()" style="margin-left:auto;">换一批</button></div>
+      <div class="panel-body" style="padding:8px;">
+        <div class="title-options" id="titleOptions"></div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="panel">
+      <div class="panel-header">📊 参考数据</div>
+      <div class="panel-body">
+        <div class="stats-grid" id="refStats"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Preview -->
+  <div class="main">
+    <!-- Tabs -->
+    <div class="panel" style="flex:1;">
+      <div class="panel-header" style="border-bottom:none;padding-bottom:0;">
+        <div class="tabs" id="tabBar">
+          <button class="tab active" onclick="switchTab('preview')">📄 预览</button>
+          <button class="tab" onclick="switchTab('edit')">✏️ 编辑</button>
+          <button class="tab" onclick="switchTab('cover')">🖼️ 封面</button>
+        </div>
+      </div>
+      <div class="panel-body" id="tabContent" style="padding:20px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// Data: Title Formulas (from 69-note analysis)
+// ============================================================
+const TITLE_FORMULAS = [
+  { name: '二选一困境', note: '#1爆款 155万阅读 — 制造二元选择困境', template: (a,b) => `你该${a}，还是${b}？` },
+  { name: '人格分类', note: '#3爆款 48万阅读 — 分类产生认同感', template: (cat) => `你是哪种${cat}？` },
+  { name: '测试承诺', note: '#8爆款 38万阅读 — 直接引导测试行为', template: (p) => `测一测，你的${p}？` },
+  { name: '命运揭示', note: '#6爆款 44万阅读 — 宿命感驱动好奇心', template: (attr, out) => `你的${attr}，已经替你选好了${out}` },
+  { name: '好奇驱动', note: '#11爆款 27万阅读 — 激因素激发探索欲', template: (factor, out) => `${factor}，其实决定了你的${out}？` },
+];
+
+// Dilemma pairs by category
+const DILEMMA_PAIRS = {
+  career: [
+    ['换工作','换活法'], ['追逐热爱','接受现实'], ['辞职重来','继续深耕'],
+    ['冒险创业','安稳打工'], ['要钱','要意义'], ['拼命卷','躺平过'],
+  ],
+  love: [
+    ['继续等','主动追'], ['跟随感觉','权衡条件'], ['热烈去爱','细水长流'],
+    ['年上','年下'], ['深情投入','保持清醒'], ['原谅一次','转身离开'],
+  ],
+  personality: [
+    ['改变自己','接纳自己'], ['做自己','合群'], ['独处充电','社交充电'],
+  ],
+  self: [
+    ['往前冲','停下来'], ['改变','接受'], ['做减法','做加法'],
+  ],
+  life_decision: [
+    ['大城市','小城市'], ['换方向','继续走'], ['冒险','稳妥'],
+  ],
+};
+
+// Pain points
+const PAIN_POINTS = {
+  career: [
+    '每天上班像上坟，下班像刑满释放。',
+    '工作还行，但就是提不起劲。',
+    '周围人都说"挺好的"，但你自己知道不对劲。',
+    '看着别人发光，自己却在将就。',
+    '想辞职又不敢，不辞职又不甘心。',
+  ],
+  love: [
+    '明明条件不差，但就是遇不到对的人。',
+    '每次谈恋爱都像复制粘贴，同样的剧情反复上演。',
+    '你以为是运气问题，其实不是。',
+    '为什么总被同一种人吸引？',
+    '爱得越深，伤得越重。到底是哪里出了问题？',
+  ],
+  personality: [
+    '你活得很用力，但好像总比别人累。',
+    '有些事你以为是性格缺陷，其实是天赋。',
+    '你觉得自己"不合群"，可能只是没找对圈子。',
+    '你比想象中更有力量，只是还没发现。',
+    '你是不是总觉得自己哪里不对？',
+  ],
+  self: [
+    '你以为你在做自己，其实一直在演别人。',
+    '你想要的，和你真正需要的，可能完全不一样。',
+    '你的选择，真的是你自己的选择吗？',
+    '大多数人对自己的了解，不超过20%。',
+    '你觉得自己"就这样了"，其实可以活成另一个版本。',
+  ],
+  life_decision: [
+    '人生最大的浪费，不是选错，是不选。',
+    '你在犹豫的时候，已经做出了选择。',
+    '有些路看起来对，走上去才发现是死胡同。',
+    '你以为自己在等一个机会，其实你只是在逃避。',
+    '站在十字路口的感觉，你懂吗？',
+  ],
+};
+
+const HOOKS = [
+  '你有没有这种感觉：', '你是不是也这样：', '一个扎心的真相：',
+  '你有没有想过这个问题：', '其实大部分人都在将就。',
+  '这个问题，你敢问自己吗？', '说真的，', '先别划走。',
+  '停下来3秒，问问你自己：', '我发现了一个规律：',
+];
+
+const CTAS = [
+  '把答案打在评论区，我帮你看看。',
+  '评论区打出你的选项，答案在下一期揭晓。',
+  '在评论区留下你的字母，关注我看答案。',
+  '你的答案是什么？评论区见。',
+];
+
+const FOLLOWS = [
+  '关注我 @橘猫的答案箱，每天一个测试，更了解自己。',
+  '关注我，下一期揭晓每个选项对应的结果。',
+  '点个关注，不错过答案。',
+  '喜欢就收藏，下次方便找。关注我，解锁更多测试。',
+];
+
+const TOPIC_HASHTAGS = {
+  career: ['#职业规划','#职场困惑','#换工作','#职业测试'],
+  love: ['#恋爱心理','#感情测试','#亲密关系','#恋爱困惑'],
+  personality: ['#认识自己','#人格测试','#性格分析','#自我探索'],
+  self: ['#自我成长','#认识自己','#心理测试','#个人提升'],
+  life_decision: ['#人生选择','#困惑','#方向','#决定'],
+};
+const CORE_HASHTAGS = ['#心理测试','#橘猫的答案箱','#妙答'];
+
+// ============================================================
+// State
+// ============================================================
+let configs = {};
+let currentConfigId = null;
+let currentNote = null;
+let generatedTitles = [];
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) { const a = [...arr]; for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function pick(arr, n) { return shuffle(arr).slice(0, Math.min(n, arr.length)); }
+
+// ============================================================
+// Category inference
+// ============================================================
+function inferCategory(config) {
+  const t = (config.meta.title + ' ' + config.dimensions.map(d=>d.name).join(' '));
+  if (/职业|工作|创业|职场|从商|辞职|深耕/.test(t)) return 'career';
+  if (/恋爱|爱情|情人|爱|伴侣|心动|亲密|对象|年上|年下|姐弟|大叔|依恋|占有|异地|暗恋|初恋|择偶|适配|上嫁/.test(t)) return 'love';
+  if (/人格|性格|MBTI|INFP|INTP|ENFP|INFJ|外向|内向|气质/.test(t)) return 'personality';
+  if (/自己|自我|成长|人生|选择|方向|活法|边界|内心|潜力/.test(t)) return 'self';
+  return 'life_decision';
+}
+
+function cleanTopic(title) {
+  return title.replace(/\n/g,'').replace(/你的/g,'').replace(/测一测[,，]?/g,'')
+    .replace(/测测[,，]?/g,'').replace(/[？?：:！!]/g,'').trim();
+}
+
+// ============================================================
+// Title generation
+// ============================================================
+function genTitlesForConfig(config) {
+  const cat = inferCategory(config);
+  const topic = cleanTopic(config.meta.title);
+  const dims = config.dimensions.map(d => d.name.replace(/维度|匹配|需求/g, ''));
+  const titles = [];
+  const seen = new Set();
+
+  function add(t) { if (!seen.has(t)) { seen.add(t); titles.push(t); } }
+
+  // 1. 二选一困境 (generate 2-3 variants)
+  const pairs = DILEMMA_PAIRS[cat] || DILEMMA_PAIRS.life_decision;
+  const matched = [];
+  for (const [a,b] of pairs) {
+    const txt = topic + dims.join('');
+    if (txt.includes(a) || txt.includes(b)) matched.push([a,b]);
+  }
+  const usePairs = matched.length >= 1 ? matched : pick(pairs, 3);
+  for (const [a,b] of usePairs.slice(0,3)) {
+    add(`你该${a}，还是${b}？`);
+  }
+
+  // 2. 人格分类
+  if (dims.length >= 2) {
+    add(`你是哪种${dims[0]}型 vs ${dims[1]}型？`);
+  }
+  if (config.results && config.results.length >= 3) {
+    const rnames = config.results.slice(0,3).map(r => r.name);
+    add(`你是${rnames.join('、')}系？`);
+  }
+
+  // 3. 测试承诺
+  add(`测一测，你的${topic}？`);
+  if (dims[0]) add(`测一测，你的${dims[0]}有多强？`);
+
+  // 4. 命运揭示
+  if (dims[0]) add(`你的${dims[0]}，已经替你选好了${topic}`);
+
+  // 5. 好奇驱动
+  if (dims[0]) add(`${dims[0]}，其实决定了你的${topic}？`);
+
+  // 6. Variation of #1 template
+  if (cat === 'career') {
+    add(`你该换工作，还是换活法？`);
+    add(`你的工作，适合你吗？（测完想哭）`);
+  }
+  if (cat === 'love') {
+    add(`你会对哪种类型的人上头？`);
+    add(`TA现在对你什么心思？`);
+  }
+
+  return titles.slice(0, 8);
+}
+
+// ============================================================
+// Note generation
+// ============================================================
+function genNote(config, title) {
+  const cat = inferCategory(config);
+  const topic = cleanTopic(config.meta.title);
+  const nq = config.questions ? config.questions.length : 34;
+  const time = config.meta.estimatedTime || '3分钟';
+
+  // Hook
+  const hook = rand(HOOKS);
+  const pains = pick(PAIN_POINTS[cat] || PAIN_POINTS.self, 3);
+  const relatable = pains.join('\n');
+
+  // Test intro
+  const intro = `${nq}道题，${time}，测出你的「${topic}」`;
+
+  // Instruction
+  const instruction = '每个问题选最像你的选项。\n记住你选的A、B、C、D。\n要诚实，骗自己没意义。';
+
+  // CTA + Follow
+  const cta = rand(CTAS);
+  const follow = rand(FOLLOWS);
+
+  // Hashtags
+  const tags = [...CORE_HASHTAGS, ...(TOPIC_HASHTAGS[cat] || [])].join(' ');
+
+  const body = `${hook}\n\n${relatable}\n\n来，做一个测试。\n${intro}\n\n${instruction}\n\n${cta}\n\n${follow}\n\n${tags}`;
+
+  return { configId: config.meta.id, category: cat, title, body, config };
+}
+
+// ============================================================
+// Refresh all titles
+// ============================================================
+function refreshTitles() {
+  if (!currentConfigId) return;
+  const config = configs[currentConfigId];
+  generatedTitles = genTitlesForConfig(config);
+  renderTitleOptions();
+}
+
+function regenTitles() {
+  refreshTitles();
+  // Auto-select first title
+  if (generatedTitles.length > 0) {
+    selectTitle(generatedTitles[0]);
+  }
+}
+
+function selectTitle(title) {
+  const config = configs[currentConfigId];
+  currentNote = genNote(config, title);
+  renderPreview();
+  renderCover();
+  renderTitleOptions(); // re-render to show selection
+}
+
+// ============================================================
+// Render
+// ============================================================
+function renderTestList() {
+  const el = document.getElementById('testList');
+  const cats = { career: '💼', love: '💕', personality: '🧠', self: '✨', life_decision: '🧭' };
+  const catNames = { career: '职业', love: '恋爱', personality: '人格', self: '自我', life_decision: '抉择' };
+
+  el.innerHTML = Object.entries(configs).map(([id,cfg]) => {
+    const cat = inferCategory(cfg);
+    const active = id === currentConfigId ? ' active' : '';
+    const title = cfg.meta.title.replace(/\n/g, ' ');
+    return `
+      <div class="test-item${active}" onclick="selectTest('${id}')">
+        <div class="test-emoji">${cats[cat]||'✨'}</div>
+        <div class="test-info">
+          <div class="test-name">${title}</div>
+          <div class="test-cat">${catNames[cat]||cat} · ${cfg.questions ? cfg.questions.length : '?'}题</div>
+        </div>
+        <div class="test-badge">${cfg.meta.estimatedTime||'3分钟'}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Reference stats
+  renderRefStats();
+}
+
+function renderFormulaList() {
+  const el = document.getElementById('formulaList');
+  el.innerHTML = TITLE_FORMULAS.map(f => `
+    <div class="formula-item">
+      <div style="flex:1;">
+        <div class="formula-name">${f.name}</div>
+        <div class="formula-note">${f.note}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTitleOptions() {
+  const el = document.getElementById('titleOptions');
+  if (!generatedTitles.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px;">请先选择一个测试</div>';
+    return;
+  }
+  el.innerHTML = generatedTitles.map((t,i) => {
+    const sel = currentNote && currentNote.title === t ? ' selected' : '';
+    return `
+      <div class="title-option${sel}" onclick="selectTitle(generatedTitles[${i}])">
+        ${t}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPreview() {
+  const el = document.getElementById('tabContent');
+  if (!currentNote) {
+    el.innerHTML = '<div style="color:var(--muted);text-align:center;padding:60px;">👈 从左侧选择测试和标题</div>';
+    return;
+  }
+  const title = currentNote.title;
+  const bodyLines = currentNote.body.split('\n');
+  const hashtagsLine = bodyLines[bodyLines.length - 1];
+  const mainBody = bodyLines.slice(0, -1).join('\n');
+
+  el.innerHTML = `
+    <div class="note-preview">
+      <div class="note-title">${title}</div>
+      <div class="note-body">${mainBody}</div>
+      <div class="note-hashtags">${hashtagsLine}</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="copyNote()">📋 复制全文</button>
+      <button class="btn btn-outline" onclick="copyTitle()">📌 复制标题</button>
+      <button class="btn btn-outline" onclick="downloadNote()">💾 下载笔记</button>
+    </div>
+  `;
+}
+
+function renderCover() {
+  // Used in cover tab
+}
+
+function renderCoverTab() {
+  if (!currentNote) {
+    document.getElementById('tabContent').innerHTML = '<div style="color:var(--muted);text-align:center;padding:60px;">请先生成笔记</div>';
+    return;
+  }
+  const config = currentNote.config;
+  const cat = currentNote.category;
+  const displayTitle = config.meta.title.replace(/\n/g, '<br>');
+  const colors = {
+    career: ['#2B3957','#D97757'], love: ['#2B3957','#C97B9B'],
+    personality: ['#2B3957','#5C8D7B'], self: ['#2B3957','#6B8E7F'],
+    life_decision: ['#2B3957','#B89B6B'],
+  };
+  const [primary, accent] = colors[cat] || colors.self;
+  const emojis = { career:'💼', love:'💕', personality:'🧠', self:'✨', life_decision:'🧭' };
+  const emoji = emojis[cat] || '✨';
+
+  const coverHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{width:1080px;height:1440px;background:#fff;font-family:'PingFang SC','Microsoft YaHei',sans-serif;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+.top-stripe{height:12px;background:linear-gradient(90deg,${primary},${accent});}
+.content{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 80px;text-align:center;}
+.emoji-icon{font-size:120px;margin-bottom:40px;}
+.main-title{font-size:72px;font-weight:900;color:${primary};line-height:1.25;letter-spacing:2px;margin-bottom:30px;}
+.subtitle-line{font-size:36px;color:#888;font-weight:400;margin-bottom:50px;}
+.test-badge{display:inline-block;background:${primary};color:#fff;padding:16px 48px;border-radius:50px;font-size:32px;font-weight:600;letter-spacing:4px;}
+.bottom-section{padding:40px 80px 50px;text-align:center;}
+.brand{font-size:36px;font-weight:700;color:${primary};letter-spacing:3px;}
+.brand-sub{font-size:24px;color:#AAA;margin-top:8px;}
+.bottom-stripe{height:8px;background:linear-gradient(90deg,${accent},${primary});}
+</style></head><body>
+<div class="top-stripe"></div>
+<div class="content">
+<div class="emoji-icon">${emoji}</div>
+<div class="main-title">${displayTitle}</div>
+<div class="subtitle-line">一个测试，看清你自己</div>
+<div class="test-badge">心理测试</div>
+</div>
+<div class="bottom-section">
+<div class="brand">橘猫的答案箱</div>
+<div class="brand-sub">每天一个测试，更了解自己</div>
+</div>
+<div class="bottom-stripe"></div>
+</body></html>`;
+
+  document.getElementById('tabContent').innerHTML = `
+    <div style="display:flex;gap:24px;align-items:flex-start;">
+      <div class="cover-preview">
+        <iframe srcdoc="${coverHtml.replace(/"/g,'&quot;')}"></iframe>
+      </div>
+      <div style="flex:1;">
+        <div class="edit-area">
+          <label>封面标题</label>
+          <textarea id="coverTitleEdit" style="min-height:80px;font-size:16px;">${config.meta.title}</textarea>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="updateCover()">🔄 更新封面</button>
+          <button class="btn btn-outline" onclick="downloadCover()">💾 下载封面HTML</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderRefStats() {
+  const stats = [
+    { value: '155万', label: '#1爆款阅读' },
+    { value: '5.1万', label: '#1爆款评论' },
+    { value: '69条', label: '历史笔记数' },
+    { value: '5种', label: '标题公式' },
+  ];
+  document.getElementById('refStats').innerHTML = stats.map(s => `
+    <div class="stat-item">
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// Tab switching
+// ============================================================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (tab === 'preview') renderPreview();
+  else if (tab === 'edit') renderEditTab();
+  else if (tab === 'cover') renderCoverTab();
+}
+
+function renderEditTab() {
+  if (!currentNote) {
+    document.getElementById('tabContent').innerHTML = '<div style="color:var(--muted);text-align:center;padding:60px;">请先生成笔记</div>';
+    return;
+  }
+  document.getElementById('tabContent').innerHTML = `
+    <div class="edit-area">
+      <label>标题</label>
+      <input type="text" id="editTitle" value="${currentNote.title.replace(/"/g,'&quot;')}">
+    </div>
+    <div class="edit-area">
+      <label>正文</label>
+      <textarea id="editBody">${currentNote.body}</textarea>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="saveEdit()">✅ 保存修改</button>
+      <button class="btn btn-accent" onclick="copyNote()">📋 复制全文</button>
+    </div>
+  `;
+}
+
+function saveEdit() {
+  const newTitle = document.getElementById('editTitle').value.trim();
+  const newBody = document.getElementById('editBody').value;
+  if (newTitle) currentNote.title = newTitle;
+  currentNote.body = newBody;
+  showToast('已保存 ✅');
+  renderPreview();
+}
+
+// ============================================================
+// Actions
+// ============================================================
+function selectTest(id) {
+  currentConfigId = id;
+  document.querySelectorAll('.test-item').forEach(el => el.classList.remove('active'));
+  event.target.closest('.test-item').classList.add('active');
+  refreshTitles();
+  if (generatedTitles.length > 0) {
+    selectTitle(generatedTitles[0]);
+  }
+}
+
+function copyNote() {
+  if (!currentNote) return;
+  const text = `${currentNote.title}\n\n${currentNote.body}`;
+  navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板 📋'));
+}
+
+function copyTitle() {
+  if (!currentNote) return;
+  navigator.clipboard.writeText(currentNote.title).then(() => showToast('标题已复制 📌'));
+}
+
+function downloadNote() {
+  if (!currentNote) return;
+  const text = `${currentNote.title}\n\n${currentNote.body}`;
+  const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentConfigId}_note.txt`;
+  a.click();
+  showToast('笔记已下载 💾');
+}
+
+function downloadCover() {
+  if (!currentNote) return;
+  const config = currentNote.config;
+  const cat = currentNote.category;
+  const displayTitle = config.meta.title.replace(/\n/g, '<br>');
+  const colors = {
+    career: ['#2B3957','#D97757'], love: ['#2B3957','#C97B9B'],
+    personality: ['#2B3957','#5C8D7B'], self: ['#2B3957','#6B8E7F'],
+    life_decision: ['#2B3957','#B89B6B'],
+  };
+  const [primary, accent] = colors[cat] || colors.self;
+  const emojis = { career:'💼', love:'💕', personality:'🧠', self:'✨', life_decision:'🧭' };
+  const emoji = emojis[cat] || '✨';
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=1080,height=1440">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{width:1080px;height:1440px;background:#fff;font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+.top-stripe{height:12px;background:linear-gradient(90deg,${primary},${accent});}
+.content{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px 80px;text-align:center;}
+.emoji-icon{font-size:120px;margin-bottom:40px;}
+.main-title{font-size:72px;font-weight:900;color:${primary};line-height:1.25;letter-spacing:2px;margin-bottom:30px;}
+.subtitle-line{font-size:36px;color:#888;font-weight:400;margin-bottom:50px;}
+.test-badge{display:inline-block;background:${primary};color:#fff;padding:16px 48px;border-radius:50px;font-size:32px;font-weight:600;letter-spacing:4px;}
+.bottom-section{padding:40px 80px 50px;text-align:center;}
+.brand{font-size:36px;font-weight:700;color:${primary};letter-spacing:3px;}
+.brand-sub{font-size:24px;color:#AAA;margin-top:8px;}
+.bottom-stripe{height:8px;background:linear-gradient(90deg,${accent},${primary});}
+</style></head>
+<body>
+<div class="top-stripe"></div>
+<div class="content">
+<div class="emoji-icon">${emoji}</div>
+<div class="main-title">${displayTitle}</div>
+<div class="subtitle-line">一个测试，看清你自己</div>
+<div class="test-badge">心理测试</div>
+</div>
+<div class="bottom-section">
+<div class="brand">橘猫的答案箱</div>
+<div class="brand-sub">每天一个测试，更了解自己</div>
+</div>
+<div class="bottom-stripe"></div>
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentConfigId}_cover.html`;
+  a.click();
+  showToast('封面已下载 🖼️');
+}
+
+function updateCover() {
+  renderCoverTab();
+  showToast('封面已更新 🔄');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ============================================================
+// Load configs
+// ============================================================
+async function loadConfigs() {
+  const configFiles = [
+    'career-mismatch','quit-decision','work-personality','entrepreneurship',
+    'career-energy','work-energy','love-type','love-secret','love-control',
+    'long-distance','love-money','age-gap','attachment','first-love',
+    'heart-vs-fit','hypergamy','possessiveness','recovery','toxic-attract','younger-love'
+  ];
+
+  for (const id of configFiles) {
+    try {
+      const resp = await fetch(`configs/${id}.json`);
+      const cfg = await resp.json();
+      configs[id] = cfg;
+    } catch(e) {
+      console.warn(`Failed to load ${id}:`, e);
+    }
+  }
+}
+
+async function init() {
+  await loadConfigs();
+  renderTestList();
+  renderFormulaList();
+  renderTitleOptions();
+  document.getElementById('tabContent').innerHTML = '<div style="color:var(--muted);text-align:center;padding:60px;">👈 从左侧选择测试和标题，预览区会自动生成笔记</div>';
+
+  // Auto-select first test
+  const firstId = Object.keys(configs)[0];
+  if (firstId) {
+    currentConfigId = firstId;
+    document.querySelector('.test-item')?.classList.add('active');
+    refreshTitles();
+    if (generatedTitles.length > 0) selectTitle(generatedTitles[0]);
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
